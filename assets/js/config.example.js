@@ -1,26 +1,19 @@
+// Example only. Never put service-role keys or other secrets in browser code.
+// The Supabase publishable key is designed for client-side use and is protected by RLS.
 window.SOUTAK_CONFIG = {
   supabaseUrl: "https://YOUR_PROJECT.supabase.co",
-  supabasePublishableKey: "sb_publishable_YOUR_KEY",
-  siteUrl: "https://YOUR-DOMAIN.example",
+  supabasePublishableKey: "sb_publishable_YOUR_PUBLIC_KEY",
+  siteUrl: "https://soutak-plus.vercel.app",
   analyticsEnabled: true,
-
-  publicFormEndpoint: "https://YOUR_PROJECT.supabase.co/functions/v1/public-form",
-  turnstileSiteKey: "YOUR_TURNSTILE_SITE_KEY",
-
   ads: {
-    enabled: true,
+    enabled: false,
     provider: "adsense",
-    publisherId: "ca-pub-XXXXXXXXXXXXXXXX",
-    slots: {
-      header: "1234567890",
-      inline: "2345678901",
-      footer: "3456789012"
-    },
-
+    publisherId: "",
+    slots: { header: "", inline: "", footer: "" },
     rewarded: {
-      enabled: true,
+      enabled: false,
       provider: "google_ad_manager",
-      adUnitPath: "/YOUR_NETWORK_CODE/YOUR_REWARDED_AD_UNIT"
+      adUnitPath: ""
     }
   }
 };
