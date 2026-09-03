@@ -6,19 +6,12 @@
     adUnitPath: runtime.rewardedAdUnitPath || base.adUnitPath || "",
     enabled: Boolean(runtime.rewardedAdUnitPath || (base.enabled && base.adUnitPath))
   };
-  const state = {
-    readyEvent: null,
-    slot: null,
-    loading: false,
-    resolved: false
-  };
+  const state = { readyEvent: null, slot: null, loading: false, resolved: false };
 
   function loadGPT() {
     return new Promise((resolve, reject) => {
       if (window.googletag?.apiReady) return resolve();
-
       window.googletag = window.googletag || { cmd: [] };
-
       if (!document.querySelector('script[data-soutak-gpt]')) {
         const s = document.createElement("script");
         s.async = true;
@@ -29,24 +22,15 @@
         document.head.appendChild(s);
       } else {
         const timer = setInterval(() => {
-          if (window.googletag?.apiReady) {
-            clearInterval(timer);
-            resolve();
-          }
+          if (window.googletag?.apiReady) { clearInterval(timer); resolve(); }
         }, 100);
-        setTimeout(() => {
-          clearInterval(timer);
-          if (!window.googletag?.apiReady) reject(new Error("gpt_timeout"));
-        }, 8000);
+        setTimeout(() => { clearInterval(timer); if (!window.googletag?.apiReady) reject(new Error("gpt_timeout")); }, 8000);
       }
     });
   }
 
   async function showOneRewardedAd() {
-    if (!cfg.enabled || cfg.provider !== "google_ad_manager" || !cfg.adUnitPath) {
-      throw new Error("rewarded_not_configured");
-    }
-
+    if (!cfg.enabled || cfg.provider !== "google_ad_manager" || !cfg.adUnitPath) throw new Error("rewarded_not_configured");
     if (state.loading) throw new Error("rewarded_busy");
     state.loading = true;
     state.resolved = false;
@@ -55,31 +39,22 @@
 
     try {
       await loadGPT();
-
       return await new Promise((resolve, reject) => {
         let settled = false;
-        const finish = (ok, reason) => {
+        let cleanup = () => {};
+        const finish = (ok, reason, reward = {}) => {
           if (settled) return;
           settled = true;
           state.loading = false;
-          if (ok) resolve({ granted: true });
+          cleanup();
+          if (ok) resolve({ granted: true, rewardType: reward.type ?? null, rewardAmount: reward.amount ?? null });
           else reject(new Error(reason || "reward_not_granted"));
         };
 
         googletag.cmd.push(() => {
           const pubads = googletag.pubads();
-
-          const slot = googletag.defineOutOfPageSlot(
-            cfg.adUnitPath,
-            googletag.enums.OutOfPageFormat.REWARDED
-          );
-
-          if (!slot) {
-            state.loading = false;
-            reject(new Error("rewarded_unsupported"));
-            return;
-          }
-
+          const slot = googletag.defineOutOfPageSlot(cfg.adUnitPath, googletag.enums.OutOfPageFormat.REWARDED);
+          if (!slot) { state.loading = false; reject(new Error("rewarded_unsupported")); return; }
           state.slot = slot;
           slot.addService(pubads);
 
@@ -89,23 +64,29 @@
             const shown = event.makeRewardedVisible();
             if (!shown) finish(false, "rewarded_show_failed");
           };
-
           const onGranted = (event) => {
             if (event.slot !== slot) return;
             state.resolved = true;
-            finish(true);
+            finish(true, null, event.payload || {});
           };
-
           const onClosed = (event) => {
             if (event.slot !== slot) return;
             if (!state.resolved) finish(false, "reward_not_completed");
             try { googletag.destroySlots([slot]); } catch (_) {}
           };
+          cleanup = () => {
+            try {
+              if (typeof pubads.removeEventListener === "function") {
+                pubads.removeEventListener("rewardedSlotReady", onReady);
+                pubads.removeEventListener("rewardedSlotGranted", onGranted);
+                pubads.removeEventListener("rewardedSlotClosed", onClosed);
+              }
+            } catch (_) {}
+          };
 
           pubads.addEventListener("rewardedSlotReady", onReady);
           pubads.addEventListener("rewardedSlotGranted", onGranted);
           pubads.addEventListener("rewardedSlotClosed", onClosed);
-
           googletag.enableServices();
           googletag.display(slot);
 
