@@ -12,9 +12,6 @@ permissions:
   pages: write
   id-token: write
 
-environment:
-  name: github-pages
-
 jobs:
   import-and-deploy:
     if: github.actor != 'github-actions[bot]'
