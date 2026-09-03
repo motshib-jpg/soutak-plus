@@ -2,18 +2,15 @@
   "name": "صوتك+",
   "short_name": "صوتك+",
   "description": "منصة عربية لصانع المحتوى لبناء الجمهور وتحويله إلى فرص.",
-  "start_url": "./index.html",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#070a12",
   "theme_color": "#070a12",
   "lang": "ar",
   "dir": "rtl",
   "icons": [
-    {
-      "src": "assets/images/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+    {"src":"/assets/images/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
   ]
 }
