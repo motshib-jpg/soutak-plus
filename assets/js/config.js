@@ -1,22 +1,13 @@
 window.SOUTAK_CONFIG = {
-  supabaseUrl: "",
-  supabasePublishableKey: "",
-  siteUrl: "https://motshib-jpg.github.io/soutak-plus",
+  supabaseUrl: "https://vvrdchwlmwpbsxsmcthp.supabase.co",
+  supabasePublishableKey: "sb_publishable_oIOIyaajAgqJQ_Nb4EJ3pA_fc-EUaTM",
+  siteUrl: "https://soutak-plus.vercel.app",
   analyticsEnabled: true,
-
-  publicFormEndpoint: "",
-  turnstileSiteKey: "",
-
   ads: {
     enabled: false,
     provider: "adsense",
     publisherId: "",
-    slots: {
-      header: "",
-      inline: "",
-      footer: ""
-    },
-
+    slots: { header: "", inline: "", footer: "" },
     rewarded: {
       enabled: false,
       provider: "google_ad_manager",
