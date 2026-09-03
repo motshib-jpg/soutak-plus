@@ -39,10 +39,14 @@ for marker in ['"creator-starter-guide":5','"content-templates":5','"first-audie
         errors.append(f"Reward policy missing or inconsistent: {marker}")
 if "rewardedSlotGranted" not in ads:
     errors.append("Rewarded ads must grant progress only from rewardedSlotGranted")
+if "localStorage" in gate:
+    errors.append("reward-gate.js must not trust localStorage for entitlement")
+if "functions/v1/soutak-reward" not in gate:
+    errors.append("reward-gate.js must use the server-side reward function")
 
-for needed in [root / "downloads/creator-starter-guide.md", root / "downloads/content-templates.md", root / "downloads/first-audience-roadmap.md"]:
-    if not needed.exists() or needed.stat().st_size == 0:
-        errors.append(f"Missing or empty resource: {needed.relative_to(root)}")
+for forbidden_resource in ["downloads/creator-starter-guide.md", "downloads/content-templates.md", "downloads/first-audience-roadmap.md"]:
+    if (root / forbidden_resource).exists():
+        errors.append(f"Protected resource must not be public: {forbidden_resource}")
 
 for forbidden in ["checkout.html", "payment.html", "subscription.html"]:
     if (root / forbidden).exists():
@@ -50,10 +54,12 @@ for forbidden in ["checkout.html", "payment.html", "subscription.html"]:
 
 if not (root / "vercel.json").exists():
     errors.append("vercel.json is required for production hosting")
+if not (root / "account.html").exists() or not (root / "assets/js/account.js").exists():
+    errors.append("User account flow is required for server-bound reward entitlement")
 
 if errors:
     print("QA FAILED")
     for e in errors:
         print("-", e)
     sys.exit(1)
-print(f"QA PASSED: {len(htmls)} HTML pages checked; Vercel production + rewarded policy 5/5/10 verified.")
+print(f"QA PASSED: {len(htmls)} HTML pages checked; server-side reward entitlement + 5/5/10 verified.")
