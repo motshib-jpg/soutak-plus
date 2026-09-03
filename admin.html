@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#070a12">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="assets/images/icon.svg" type="image/svg+xml">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="صوتك+">
+<link rel="stylesheet" href="assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/supabase-client.js" defer></script>
+<script src="assets/js/app.js" defer></script>
+
+<title>لوحة الإدارة | صوتك+</title>
+<meta name="description" content="لوحة إدارة صوتك+.">
+<meta name="robots" content="noindex,nofollow,noarchive">
+</head>
+<body data-page="admin">
+<div class="ambient a1"></div><div class="ambient a2"></div>
+<div id="siteHeader"></div>
+<main>
+<section class="admin-shell">
+ <aside class="admin-side">
+  <a class="brand-login" href="index.html">صوتك+</a>
+  <button data-admin-tab="overview" class="active">نظرة عامة</button>
+  <button data-admin-tab="products">المنتجات</button>
+  <button data-admin-tab="posts">المحتوى</button>
+  <button data-admin-tab="requests">الطلبات</button>
+  <button id="logoutBtn">تسجيل الخروج</button>
+ </aside>
+ <div class="admin-main">
+  <div id="adminGuard" class="mode-banner">جارٍ التحقق من صلاحية الإدارة...</div>
+  <section class="admin-tab active" id="tab-overview">
+    <h1>لوحة التحكم</h1><div id="adminKpis" class="grid4"></div>
+  </section>
+  <section class="admin-tab" id="tab-products">
+    <h2>إضافة مادة مجانية</h2>
+    <form id="adminProductForm" class="form-grid form-card">
+     <input name="name" required placeholder="اسم المنتج">
+     <input name="slug" required placeholder="slug-example">
+     <input name="reward_ads_required" type="number" min="1" max="50" value="5" required placeholder="عدد إعلانات المكافأة">
+          <textarea name="description" required placeholder="الوصف"></textarea>
+     <button class="btn primary" type="submit">حفظ المادة المجانية</button>
+    </form><div id="adminProductsList" class="admin-list"></div>
+  </section>
+  <section class="admin-tab" id="tab-posts">
+    <h2>إضافة محتوى</h2>
+    <form id="adminPostForm" class="form-grid form-card">
+     <input name="title" required placeholder="العنوان">
+     <input name="slug" required placeholder="slug-example">
+     <input name="reward_ads_required" type="number" min="1" max="50" value="5" required placeholder="عدد إعلانات المكافأة">
+     <textarea name="excerpt" required placeholder="ملخص"></textarea>
+     <textarea name="body" required placeholder="المحتوى النصي"></textarea>
+     <button class="btn primary" type="submit">نشر</button>
+    </form><div id="adminPostsList" class="admin-list"></div>
+  </section>
+  <section class="admin-tab" id="tab-requests"><h2>طلبات الرعاية والخدمات والتواصل</h2><div id="adminRequests" class="admin-list"></div></section>
+ </div>
+</section>
+</main>
+<div id="siteFooter"></div>
+<button class="to-top" id="toTop" aria-label="العودة للأعلى">↑</button>
+<script src="assets/js/admin.js" defer></script>
+<script src="assets/js/pwa.js" defer></script>
+</body>
+</html>
