@@ -27,8 +27,37 @@ if node:
         if p.returncode:
             errors.append(f"{js.name}: JS syntax error: {p.stderr.strip()}")
 
-if "YOUR-DOMAIN.example" not in (root / "sitemap.xml").read_text(encoding="utf-8"):
-    print("INFO: domain placeholder still present (expected before deployment).")
+store = (root / "assets/js/store.js").read_text(encoding="utf-8")
+gate = (root / "assets/js/reward-gate.js").read_text(encoding="utf-8")
+ads = (root / "assets/js/rewarded-ads.js").read_text(encoding="utf-8")
+demo = (root / "assets/js/demo-data.js").read_text(encoding="utf-8")
+
+required_policy = {
+    '"creator-starter-guide":5': (store, gate),
+    '"content-templates":5': (store, gate),
+    '"first-audience":10': (store, gate),
+}
+for marker, texts in required_policy.items():
+    if not all(marker in t.replace(" ", "") for t in texts):
+        errors.append(f"Reward policy missing or inconsistent: {marker}")
+
+if demo.count("reward_ads_required: 5") < 2 or "reward_ads_required: 10" not in demo:
+    errors.append("Demo data must remain 5, 5, 10")
+
+if "rewardedSlotGranted" not in ads:
+    errors.append("Rewarded ads must grant progress only from rewardedSlotGranted")
+
+for needed in [
+    root / "downloads/creator-starter-guide.md",
+    root / "downloads/content-templates.md",
+    root / "downloads/first-audience-roadmap.md",
+]:
+    if not needed.exists() or needed.stat().st_size == 0:
+        errors.append(f"Missing or empty resource: {needed.relative_to(root)}")
+
+for forbidden in ["checkout.html", "payment.html", "subscription.html"]:
+    if (root / forbidden).exists():
+        errors.append(f"Forbidden paid-access file present: {forbidden}")
 
 if errors:
     print("QA FAILED")
@@ -36,4 +65,4 @@ if errors:
         print("-", e)
     sys.exit(1)
 
-print(f"QA PASSED: {len(htmls)} HTML pages checked.")
+print(f"QA PASSED: {len(htmls)} HTML pages checked; rewarded policy 5/5/10 verified.")
