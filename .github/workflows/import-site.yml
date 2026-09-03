@@ -1,0 +1,72 @@
+name: Import SoutakPlus Site
+
+on:
+  push:
+    paths:
+      - 'sitezip.part**'
+      - '.github/workflows/import-site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Rebuild and verify archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat sitezip.part00 sitezip.part01 sitezip.part02 sitezip.part03 sitezip.part04 > sitezip.b64
+          base64 -d sitezip.b64 > site.zip
+          echo "b16bab64ff5235325b2bdf34d104f8f16a9b8abfa830060b0510997f79598cfc  site.zip" | sha256sum -c -
+          rm -rf _site_import
+          mkdir _site_import
+          unzip -q site.zip -d _site_import
+          test -f _site_import/SoutakPlus/index.html
+          test -f _site_import/SoutakPlus/assets/js/reward-gate.js
+          test -f _site_import/SoutakPlus/assets/js/rewarded-ads.js
+          test -f _site_import/SoutakPlus/downloads/creator-starter-guide.md
+          test -f _site_import/SoutakPlus/downloads/content-templates.md
+          test -f _site_import/SoutakPlus/downloads/first-audience-roadmap.md
+
+      - name: Sync full site into repository root
+        shell: bash
+        run: |
+          set -euo pipefail
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name '.git' \
+            ! -name '.github' \
+            ! -name '_site_import' \
+            ! -name 'site.zip' \
+            ! -name 'sitezip.b64' \
+            -exec rm -rf {} +
+          cp -a _site_import/SoutakPlus/. .
+          rm -rf _site_import site.zip sitezip.b64
+          rm -f sitezip.part00 sitezip.part01 sitezip.part02 sitezip.part03 sitezip.part04
+          rm -f .github/workflows/import-site.yml
+
+      - name: Validate Rewarded Ads configuration and local links
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q 'reward_ads_required: 5' assets/js/demo-data.js
+          test "$(grep -c 'reward_ads_required: 5' assets/js/demo-data.js)" -ge 2
+          grep -q 'reward_ads_required: 10' assets/js/demo-data.js
+          grep -q 'rewardedSlotGranted' assets/js/rewarded-ads.js
+          python3 QA_CHECK.py
+
+      - name: Commit imported site
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A
+          git commit -m 'Publish SoutakPlus V7 rewarded unlock site'
+          git push
