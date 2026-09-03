@@ -1,4 +1,4 @@
-name: Import SoutakPlus Site
+name: Import and Publish SoutakPlus
 
 on:
   push:
@@ -9,11 +9,19 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+environment:
+  name: github-pages
 
 jobs:
-  import:
+  import-and-deploy:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -46,10 +54,9 @@ jobs:
             ! -name 'site.zip' \
             ! -name 'sitezip.b64' \
             -exec rm -rf {} +
-          cp -a _site_import/SoutakPlus/. .
+          rsync -a --exclude='.github/' _site_import/SoutakPlus/ ./
           rm -rf _site_import site.zip sitezip.b64
           rm -f sitezip.part00 sitezip.part01 sitezip.part02 sitezip.part03 sitezip.part04
-          rm -f .github/workflows/import-site.yml
 
       - name: Validate Rewarded Ads configuration and local links
         shell: bash
@@ -70,3 +77,17 @@ jobs:
           git add -A
           git commit -m 'Publish SoutakPlus V7 rewarded unlock site'
           git push
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
