@@ -22,16 +22,23 @@ jobs:
           set -euo pipefail
           test -f index.html
           test -f vercel.json
+          test -f account.html
+          test -f assets/js/account.js
           test -f assets/css/style.css
           test -f assets/js/reward-gate.js
           test -f assets/js/rewarded-ads.js
-          test -f downloads/creator-starter-guide.md
-          test -f downloads/content-templates.md
-          test -f downloads/first-audience-roadmap.md
+          test ! -f downloads/creator-starter-guide.md
+          test ! -f downloads/content-templates.md
+          test ! -f downloads/first-audience-roadmap.md
           grep -q '"creator-starter-guide":5' assets/js/store.js
           grep -q '"content-templates":5' assets/js/store.js
           grep -q '"first-audience":10' assets/js/store.js
           grep -q 'rewardedSlotGranted' assets/js/rewarded-ads.js
+          grep -q 'functions/v1/soutak-reward' assets/js/reward-gate.js
+          if grep -q 'localStorage' assets/js/reward-gate.js; then
+            echo 'Client-side entitlement detected.' >&2
+            exit 1
+          fi
           grep -q 'soutak_submit_sponsor_request_public' assets/js/forms.js
           grep -q 'soutak_is_admin' assets/js/admin.js
           grep -q 'soutak-plus.vercel.app' robots.txt
