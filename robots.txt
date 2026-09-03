@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin.html
 Disallow: /login.html
-Sitemap: https://motshib-jpg.github.io/soutak-plus/sitemap.xml
+Sitemap: https://soutak-plus.vercel.app/sitemap.xml
