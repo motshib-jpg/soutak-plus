@@ -6,6 +6,11 @@
     "content-templates": "downloads/content-templates.md",
     "first-audience": "downloads/first-audience-roadmap.md"
   };
+  const rewardPolicy = {
+    "creator-starter-guide": 5,
+    "content-templates": 5,
+    "first-audience": 10
+  };
 
   await loadScript("assets/js/demo-data.js");
   await loadScript("assets/js/rewarded-ads.js");
@@ -17,7 +22,7 @@
   if (db?.enabled) {
     const { data, error } = await db.client
       .from("products")
-      .select("id,slug,name,short_description,description,type,reward_ads_required,status")
+      .select("id,slug,name,short_description,description,type,status")
       .eq("status", "published")
       .order("created_at", { ascending:false });
     if (!error && data?.length) products = data;
@@ -27,23 +32,23 @@
 
   const product = products.find(p => p.slug === slug);
   const view = document.getElementById("productView");
-  if (!view || !product) {
-    if (view) view.innerHTML = "<div class='form-card'><h2>المادة غير موجودة</h2></div>";
+  if (!view || !product || !Object.prototype.hasOwnProperty.call(rewardPolicy, slug)) {
+    if (view) view.innerHTML = "<div class='form-card'><h2>المادة غير موجودة</h2><p class='muted'>المواد المتاحة هي المواد الثلاث المعتمدة في نظام صوتك+.</p></div>";
     return;
   }
 
-  const required = Math.max(1, Number(product.reward_ads_required || 5));
-  const progressKey = `soutak_reward_progress:${slug}:v1`;
-  const unlockKey = `soutak_reward_unlocked:${slug}:v1`;
+  const required = rewardPolicy[slug];
+  const progressKey = `soutak_reward_progress:${slug}:v2`;
+  const unlockKey = `soutak_reward_unlocked:${slug}:v2`;
 
-  let progress = Math.min(required, Number(localStorage.getItem(progressKey) || 0));
+  let progress = Math.min(required, Math.max(0, Number(localStorage.getItem(progressKey) || 0)));
   let unlocked = localStorage.getItem(unlockKey) === "1";
 
   view.innerHTML = `
     <div class="product-view">
       <div class="product-hero-cover">🎁</div>
       <div>
-        <span class="free-badge">بدون دفع مالي</span>
+        <span class="free-badge">بدون دفع نقدي أو اشتراك مدفوع</span>
         <h1 style="font-size:42px;margin:12px 0">${esc(product.name)}</h1>
         <p class="muted">${esc(product.description || product.short_description || "")}</p>
 
@@ -51,47 +56,30 @@
           <div class="reward-head">
             <div>
               <span class="eyebrow">طريقة الفتح</span>
-              <h3>شاهد ${required} إعلانات مكافأة لفتح هذه المادة</h3>
+              <h3>شاهد ${required} إعلانات مكافأة مكتملة لفتح هذه المادة</h3>
             </div>
             <b id="rewardCount">${progress}/${required}</b>
           </div>
-
-          <div class="reward-progress">
-            <i id="rewardProgressBar" style="width:${Math.round((progress/required)*100)}%"></i>
-          </div>
-
-          <p class="muted reward-policy">
-            كل إعلان مكتمل = خطوة واحدة. يمكنك رفض أو إغلاق الإعلان، ولن تُحسب الخطوة عند عدم اكتمال المكافأة.
-            لا حاجة للنقر على الإعلان.
-          </p>
-
+          <div class="reward-progress"><i id="rewardProgressBar" style="width:${Math.round((progress/required)*100)}%"></i></div>
+          <p class="muted reward-policy">كل إعلان مكتمل يمنح خطوة واحدة فقط عند وصول حدث المكافأة من مزود الإعلان. النقر على الإعلان لا يُحسب، وإغلاقه قبل منح المكافأة لا يُحسب.</p>
           <div class="reward-actions">
-            <button class="btn primary" id="watchRewardAd" ${unlocked ? "disabled" : ""}>
-              ${unlocked ? "المادة مفتوحة" : "مشاهدة إعلان مكافأة"}
-            </button>
+            <button class="btn primary" id="watchRewardAd" ${unlocked ? "disabled" : ""}>${unlocked ? "المادة مفتوحة" : "مشاهدة إعلان مكافأة"}</button>
             <a class="btn ghost" href="products.html">ليس الآن</a>
           </div>
-
           <div class="form-status" id="rewardStatus"></div>
         </div>
-
-        <div class="resource-reader ${unlocked ? "" : "locked"}" id="resourceReader">
-          ${unlocked ? "<p>جارٍ تحميل المادة...</p>" : "<div class='locked-message'>🔒 أكمل إعلانات المكافأة لفتح المحتوى في هذا المتصفح.</div>"}
-        </div>
+        <div class="resource-reader ${unlocked ? "" : "locked"}" id="resourceReader">${unlocked ? "<p>جارٍ تحميل المادة...</p>" : "<div class='locked-message'>🔒 أكمل إعلانات المكافأة المطلوبة لفتح المحتوى في هذا المتصفح.</div>"}</div>
       </div>
     </div>`;
 
   const btn = document.getElementById("watchRewardAd");
   const status = document.getElementById("rewardStatus");
 
-  if (unlocked) {
-    await showResource();
-    return;
-  }
+  if (unlocked) { await showResource(); return; }
 
   if (!window.SoutakRewardedAds?.configured) {
     status.className = "form-status err";
-    status.textContent = "إعلانات المكافأة غير مربوطة بعد بمزود إعلاني حقيقي؛ التقدم معطل في النسخة التجريبية.";
+    status.textContent = "إعلانات المكافأة غير مفعلة بمسار وحدة Google Ad Manager حقيقي بعد. لن يتم تسجيل تقدم وهمي.";
     btn.disabled = true;
     return;
   }
@@ -99,16 +87,13 @@
   btn.addEventListener("click", async () => {
     btn.disabled = true;
     status.className = "form-status";
-    status.textContent = `سيُعرض إعلان مكافأة واحد. عند منحه المكافأة سيصبح تقدمك ${Math.min(progress + 1, required)}/${required}.`;
-
+    status.textContent = `سيُعرض إعلان مكافأة واحد. إذا مُنحت المكافأة سيصبح تقدمك ${Math.min(progress + 1, required)}/${required}.`;
     try {
       const result = await window.SoutakRewardedAds.showOneRewardedAd();
-
       if (result?.granted) {
         progress = Math.min(required, progress + 1);
         localStorage.setItem(progressKey, String(progress));
         updateProgress();
-
         if (progress >= required) {
           unlocked = true;
           localStorage.setItem(unlockKey, "1");
@@ -118,7 +103,6 @@
           await showResource();
           return;
         }
-
         status.className = "form-status ok";
         status.textContent = `تم احتساب الإعلان. بقي ${required - progress}.`;
       }
@@ -126,10 +110,11 @@
       status.className = "form-status err";
       const map = {
         rewarded_not_configured: "إعلانات المكافأة غير مفعلة.",
-        rewarded_unsupported: "هذا الجهاز أو الصفحة لا يدعم صيغة الإعلان المكافئ حاليًا.",
+        rewarded_unsupported: "هذا الجهاز أو الصفحة لا يدعم الإعلان المكافئ حاليًا.",
         rewarded_no_fill: "لا يوجد إعلان متاح الآن. حاول لاحقًا.",
-        reward_not_completed: "لم تكتمل المكافأة، لذلك لم نحتسب هذا الإعلان.",
-        rewarded_show_failed: "تعذر عرض الإعلان."
+        reward_not_completed: "لم تكتمل المكافأة، لذلك لم يُحتسب الإعلان.",
+        rewarded_show_failed: "تعذر عرض الإعلان.",
+        rewarded_busy: "هناك إعلان قيد المعالجة بالفعل."
       };
       status.textContent = map[err.message] || "تعذر إكمال إعلان المكافأة. حاول لاحقًا.";
     } finally {
@@ -146,18 +131,13 @@
     const reader = document.getElementById("resourceReader");
     reader.classList.remove("locked");
     const file = files[slug];
-
-    if (!file) {
-      reader.innerHTML = "<p>المحتوى الحقيقي لهذه المادة لم يُربط بعد.</p>";
-      return;
-    }
-
     try {
       const res = await fetch(file, { cache:"no-store" });
+      if (!res.ok) throw new Error("resource_fetch_failed");
       const md = await res.text();
       reader.innerHTML = `<article class="free-resource">${renderMarkdown(md)}</article>`;
     } catch (_) {
-      reader.innerHTML = "<p>تعذر تحميل المادة. شغّل الموقع عبر START_SOUTAK_PLUS.bat بدل فتح الملف مباشرة.</p>";
+      reader.innerHTML = "<p>تعذر تحميل المادة الآن. أعد المحاولة بعد تحديث الصفحة.</p>";
     }
   }
 
@@ -172,19 +152,6 @@
       .replace(/\n/g, "<br>");
   }
 
-  function esc(s) {
-    return String(s ?? "").replace(/[&<>"]/g, m => ({
-      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;"
-    }[m]));
-  }
-
-  function loadScript(src) {
-    return new Promise(resolve => {
-      if (document.querySelector(`script[src="${src}"]`)) return resolve();
-      const s = document.createElement("script");
-      s.src = src;
-      s.onload = resolve;
-      document.head.appendChild(s);
-    });
-  }
+  function esc(s) { return String(s ?? "").replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m])); }
+  function loadScript(src) { return new Promise((resolve,reject) => { if (document.querySelector(`script[src="${src}"]`)) return resolve(); const s=document.createElement("script"); s.src=src; s.onload=resolve; s.onerror=reject; document.head.appendChild(s); }); }
 })();
