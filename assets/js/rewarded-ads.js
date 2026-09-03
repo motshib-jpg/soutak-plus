@@ -1,5 +1,11 @@
 (() => {
-  const cfg = window.SOUTAK_CONFIG?.ads?.rewarded || {};
+  const base = window.SOUTAK_CONFIG?.ads?.rewarded || {};
+  const runtime = window.SOUTAK_RUNTIME_CONFIG || {};
+  const cfg = {
+    provider: "google_ad_manager",
+    adUnitPath: runtime.rewardedAdUnitPath || base.adUnitPath || "",
+    enabled: Boolean(runtime.rewardedAdUnitPath || (base.enabled && base.adUnitPath))
+  };
   const state = {
     readyEvent: null,
     slot: null,
@@ -80,7 +86,6 @@
           const onReady = (event) => {
             if (event.slot !== slot) return;
             state.readyEvent = event;
-            // User has already clicked an explicit "watch" button before this function.
             const shown = event.makeRewardedVisible();
             if (!shown) finish(false, "rewarded_show_failed");
           };
@@ -119,11 +124,7 @@
   }
 
   window.SoutakRewardedAds = {
-    configured: Boolean(
-      cfg.enabled &&
-      cfg.provider === "google_ad_manager" &&
-      cfg.adUnitPath
-    ),
+    configured: Boolean(cfg.enabled && cfg.provider === "google_ad_manager" && cfg.adUnitPath),
     showOneRewardedAd
   };
 })();
