@@ -24,21 +24,30 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Validate site and Rewarded Ads rules
+      - name: Validate site and fixed Rewarded Ads rules
         shell: bash
         run: |
           set -euo pipefail
           test -f index.html
           test -f assets/css/style.css
+          test -f assets/js/store.js
           test -f assets/js/reward-gate.js
           test -f assets/js/rewarded-ads.js
-          test -f downloads/creator-starter-guide.md
-          test -f downloads/content-templates.md
-          test -f downloads/first-audience-roadmap.md
-          grep -q 'reward_ads_required: 5' assets/js/demo-data.js
-          test "$(grep -c 'reward_ads_required: 5' assets/js/demo-data.js)" -ge 2
-          grep -q 'reward_ads_required: 10' assets/js/demo-data.js
+          test -s downloads/creator-starter-guide.md
+          test -s downloads/content-templates.md
+          test -s downloads/first-audience-roadmap.md
+          grep -Fq '"creator-starter-guide":5' <(tr -d ' ' < assets/js/store.js)
+          grep -Fq '"content-templates":5' <(tr -d ' ' < assets/js/store.js)
+          grep -Fq '"first-audience":10' <(tr -d ' ' < assets/js/store.js)
+          grep -Fq '"creator-starter-guide":5' <(tr -d ' ' < assets/js/reward-gate.js)
+          grep -Fq '"content-templates":5' <(tr -d ' ' < assets/js/reward-gate.js)
+          grep -Fq '"first-audience":10' <(tr -d ' ' < assets/js/reward-gate.js)
           grep -q 'rewardedSlotGranted' assets/js/rewarded-ads.js
+          test "$(grep -c 'reward_ads_required: 5' assets/js/demo-data.js)" -eq 2
+          test "$(grep -c 'reward_ads_required: 10' assets/js/demo-data.js)" -eq 1
+          test ! -f checkout.html
+          test ! -f payment.html
+          test ! -f subscription.html
           python3 QA_CHECK.py
 
       - name: Configure GitHub Pages
