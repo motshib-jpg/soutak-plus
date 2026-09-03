@@ -1,105 +1,23 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#070a12">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="assets/images/icon.svg" type="image/svg+xml">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="صوتك+">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#070a12">
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="assets/images/icon.svg" type="image/svg+xml">
+<meta property="og:type" content="website"><meta property="og:site_name" content="صوتك+"><meta property="og:title" content="صوتك+ | حوّل صوتك إلى جمهور وفرص"><meta property="og:description" content="منصة عربية لصانع المحتوى لبناء الجمهور وفتح مواد رقمية بإعلانات المكافأة."><meta property="og:url" content="https://soutak-plus.vercel.app/">
 <link rel="stylesheet" href="assets/css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="assets/js/config.js"></script>
-<script src="assets/js/supabase-client.js" defer></script>
-<script src="assets/js/app.js" defer></script>
-
-<title>صوتك+ | حوّل صوتك إلى جمهور وفرص</title>
-<meta name="description" content="منصة عربية لصانع المحتوى لبناء الجمهور وبيع المنتجات الرقمية واستقبال الرعايات والتعاونات.">
-<link rel="canonical" href="https://YOUR-DOMAIN.example/">
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "Organization", "name": "صوتك+", "url": "https://YOUR-DOMAIN.example/", "description": "منصة عربية لصانع المحتوى لبناء الجمهور وتحويل المحتوى إلى فرص.", "logo": "https://YOUR-DOMAIN.example/assets/images/icon.svg"}</script>
-<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "صوتك+", "url": "https://YOUR-DOMAIN.example/", "inLanguage": "ar"}</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/config.js"></script><script src="assets/js/supabase-client.js" defer></script><script src="assets/js/app.js" defer></script>
+<title>صوتك+ | حوّل صوتك إلى جمهور وفرص</title><meta name="description" content="منصة عربية لصانع المحتوى تجمع المحتوى والمواد الرقمية والخدمات والتعاون في مكان واحد."><link rel="canonical" href="https://soutak-plus.vercel.app/">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","name":"صوتك+","url":"https://soutak-plus.vercel.app/","description":"منصة عربية لصانع المحتوى لبناء الجمهور وتحويل المحتوى إلى فرص.","logo":"https://soutak-plus.vercel.app/assets/images/icon.svg"}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"صوتك+","url":"https://soutak-plus.vercel.app/","inLanguage":"ar"}</script>
 </head>
-<body data-page="home">
-<div class="ambient a1"></div><div class="ambient a2"></div>
-<div id="siteHeader"></div>
+<body data-page="home"><div class="ambient a1"></div><div class="ambient a2"></div><div id="siteHeader"></div>
 <main>
 <div class="container ad-wrap" data-ad-slot="header"></div>
-<section class="hero" id="home">
-  <div class="container hero-grid">
-    <div class="hero-copy reveal">
-      <span class="pill"><i></i> مركزك الرقمي المستقل</span>
-      <h1>لا تجعل صوتك <span class="grad">منشورًا يختفي.</span> حوّله إلى جمهور وفرص.</h1>
-      <p>صوتك+ يجمع محتواك ومنتجاتك وخدماتك والرعايات والنشرة البريدية في مكان واحد تملكه أنت.</p>
-      <div class="actions">
-        <a class="btn primary" href="content.html">ابدأ بالمحتوى ←</a>
-        <a class="btn ghost" href="products.html">استكشف المتجر</a>
-      </div>
-      <div class="truth">لا توجد وعود بدخل مضمون. الموقع يبني لك البنية؛ النتائج تعتمد على المحتوى والجمهور والتنفيذ.</div>
-    </div>
-    <div class="creator-card reveal">
-      <div class="browser"><span>● ● ●</span><small>soutakplus</small></div>
-      <div class="profile">
-        <div class="avatar">ص+</div>
-        <div><h3>صوتك+</h3><small>محتوى • منتجات • رعايات</small></div>
-      </div>
-      <p class="muted">مكانك الخاص خارج خوارزميات التواصل. اجمع جمهورك هنا وحوّل الثقة إلى فرص حقيقية.</p>
-      <div class="quick-links">
-        <a href="content.html">🎬 أحدث المحتوى <b>←</b></a>
-        <a href="products.html">📚 المنتجات الرقمية <b>←</b></a>
-        <a href="services.html">💼 الخدمات <b>←</b></a>
-        <a href="sponsors.html">🤝 التعاون والرعاية <b>←</b></a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section class="trust"><div class="container trust-row">
-  <span>✓ قائمة بريدية</span><span>✓ متجر رقمي</span><span>✓ رعايات</span>
-  <span>✓ خدمات</span><span>✓ تحليلات</span><span>✓ لوحة إدارة</span>
-</div></section>
-
-<section class="section">
- <div class="container">
-  <div class="section-head reveal"><span>مسارات الدخل</span><h2>بدون دفع مالي: افتح المواد بإعلانات المكافأة</h2><p>كل مادة لها عدد واضح من إعلانات المكافأة. أكمل الإعلانات المطلوبة لفتحها، من دون بطاقة أو دفع مالي.</p></div>
-  <div class="grid4">
-   <article class="card reveal"><i>📦</i><h3>منتجات رقمية</h3><p>كتب، قوالب، أدلة ودورات صغيرة مجانية للزائر.</p><a href="products.html">المتجر ←</a></article>
-   <article class="card reveal"><i>🤝</i><h3>رعايات</h3><p>صفحة واضحة للشركات لطلب الإعلان والتعاون.</p><a href="sponsors.html">الرعايات ←</a></article>
-   <article class="card reveal"><i>💼</i><h3>خدمات</h3><p>حوّل خبرتك إلى خدمة أو استشارة أو تنفيذ مدفوع.</p><a href="services.html">الخدمات ←</a></article>
-   <article class="card reveal"><i>🔗</i><h3>أفلييت</h3><p>روابط موصى بها لمنتجات وأدوات تستخدمها فعلًا.</p><a href="content.html">المحتوى ←</a></article>
-  </div>
- </div>
-</section>
-
-<section class="section soft">
- <div class="container two">
-  <div class="reveal"><span class="eyebrow">لماذا موقعك الخاص؟</span><h2>حسابك في منصة اجتماعية مستأجر، أما موقعك فملكك.</h2><p class="muted">اجمع البريد، انشر المحتوى، اعرض منتجاتك وخدماتك، واستقبل عروض الشركات دون الاعتماد على خوارزمية واحدة.</p></div>
-  <div class="panel reveal">
-   <div class="mini-kpi"><span>المحتوى</span><b>منظم وقابل للبحث</b></div>
-   <div class="mini-kpi"><span>الجمهور</span><b>قائمة بريدية مستقلة</b></div>
-   <div class="mini-kpi"><span>الدخل</span><b>إعلانات + رعايات مستقبلية</b></div>
-  </div>
- </div>
-</section>
-
-<section class="section">
- <div class="container newsletter reveal">
-   <span class="eyebrow">النشرة البريدية</span>
-   <h2>ابنِ جمهورًا تستطيع الوصول إليه مباشرة</h2>
-   <p class="muted">في وضع الإنتاج سيُحفظ البريد في قاعدة البيانات. النسخة غير المربوطة تعرض بوضوح أنها وضع تجريبي.</p>
-   <form id="newsletterForm" class="inline-form">
-     <input id="newsletterEmail" type="email" required placeholder="بريدك الإلكتروني">
-     <button class="btn primary" type="submit">انضم إلى صوتك+</button>
-   </form>
-   <div class="form-status" id="newsletterStatus"></div>
- </div>
-</section>
-</main>
-<div id="siteFooter"></div>
-<button class="to-top" id="toTop" aria-label="العودة للأعلى">↑</button>
-<script src="assets/js/forms.js" defer></script>
-<script src="assets/js/pwa.js" defer></script>
-<script src="assets/js/ads.js" defer></script>
-</body>
-</html>
+<section class="hero" id="home"><div class="container hero-grid"><div class="hero-copy reveal"><span class="pill"><i></i> مركزك الرقمي المستقل</span><h1>لا تجعل صوتك <span class="grad">منشورًا يختفي.</span> حوّله إلى جمهور وفرص.</h1><p>صوتك+ يجمع محتواك وموادك وخدماتك وفرص التعاون في مكان واحد.</p><div class="actions"><a class="btn primary" href="content.html">ابدأ بالمحتوى ←</a><a class="btn ghost" href="products.html">استكشف المواد</a></div><div class="truth">لا توجد وعود بدخل مضمون. النتائج تعتمد على جودة المحتوى والجمهور والتنفيذ.</div></div>
+<div class="creator-card reveal"><div class="browser"><span>● ● ●</span><small>soutakplus</small></div><div class="profile"><div class="avatar">ص+</div><div><h3>صوتك+</h3><small>محتوى • مواد • تعاون</small></div></div><p class="muted">مكانك الخاص خارج خوارزميات التواصل. اجمع جمهورك هنا وابنِ فرصًا حقيقية.</p><div class="quick-links"><a href="content.html">🎬 أحدث المحتوى <b>←</b></a><a href="products.html">📚 المواد الرقمية <b>←</b></a><a href="services.html">💼 الخدمات <b>←</b></a><a href="sponsors.html">🤝 التعاون والرعاية <b>←</b></a></div></div></div></section>
+<section class="trust"><div class="container trust-row"><span>✓ قائمة بريدية</span><span>✓ مواد رقمية</span><span>✓ تعاون</span><span>✓ خدمات</span><span>✓ تحليلات</span><span>✓ لوحة إدارة</span></div></section>
+<section class="section"><div class="container"><div class="section-head reveal"><span>المواد الرقمية</span><h2>بدون دفع مالي: افتح المواد بإعلانات المكافأة</h2><p>كل مادة لها عدد ثابت وواضح من إعلانات المكافأة المكتملة، وبعدها تُفتح داخل الموقع.</p></div><div class="grid4"><article class="card reveal"><i>📦</i><h3>مواد رقمية</h3><p>أدلة وقوالب ومسارات عملية تفتح بإعلانات المكافأة.</p><a href="products.html">المواد ←</a></article><article class="card reveal"><i>🤝</i><h3>تعاون ورعاية</h3><p>نموذج مباشر للشركات والعلامات التجارية لطلب التعاون.</p><a href="sponsors.html">التعاون ←</a></article><article class="card reveal"><i>💼</i><h3>خدمات</h3><p>اطلب استشارة أو مساعدة تنفيذية عبر نموذج الخدمة.</p><a href="services.html">الخدمات ←</a></article><article class="card reveal"><i>🔗</i><h3>محتوى</h3><p>مقالات ومواد معرفية منظمة وقابلة للعودة إليها.</p><a href="content.html">المحتوى ←</a></article></div></div></section>
+<section class="section soft"><div class="container two"><div class="reveal"><span class="eyebrow">لماذا موقعك الخاص؟</span><h2>اجمع محتواك وجمهورك في مكان واحد.</h2><p class="muted">انشر المحتوى، اعرض المواد والخدمات، واستقبل طلبات التعاون دون الاعتماد على منصة اجتماعية واحدة.</p></div><div class="panel reveal"><div class="mini-kpi"><span>المحتوى</span><b>منظم وقابل للبحث</b></div><div class="mini-kpi"><span>الجمهور</span><b>قائمة بريدية مستقلة</b></div><div class="mini-kpi"><span>الفتح</span><b>5 + 5 + 10 إعلانات مكافأة</b></div></div></div></section>
+<section class="section"><div class="container newsletter reveal"><span class="eyebrow">النشرة البريدية</span><h2>ابنِ جمهورًا تستطيع الوصول إليه مباشرة</h2><p class="muted">أدخل بريدك ليُحفظ بأمان في قاعدة بيانات صوتك+.</p><form id="newsletterForm" class="inline-form"><input id="newsletterEmail" type="email" required autocomplete="email" placeholder="بريدك الإلكتروني"><button class="btn primary" type="submit">انضم إلى صوتك+</button></form><div class="form-status" id="newsletterStatus"></div></div></section>
+</main><div id="siteFooter"></div><button class="to-top" id="toTop" aria-label="العودة للأعلى">↑</button><script src="assets/js/forms.js" defer></script><script src="assets/js/pwa.js" defer></script><script src="assets/js/ads.js" defer></script>
+</body></html>
