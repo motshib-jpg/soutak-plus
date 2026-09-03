@@ -17,6 +17,8 @@ for hp in htmls:
         errors.append(f"{hp.name}: production URL placeholder found")
     if "وضع تجريبي" in txt or "نسخة تجريبية" in txt:
         errors.append(f"{hp.name}: demo text found")
+    if hp.name not in {"admin.html", "login.html", "account.html", "404.html"} and 'rel="canonical" href="https://soutak-plus.vercel.app/' not in txt:
+        errors.append(f"{hp.name}: missing production canonical")
     for ref in re.findall(r'(?:src|href)="([^"#?]+)', txt):
         if ref.startswith(("http:", "https:", "mailto:", "tel:", "javascript:", "/api/")):
             continue
@@ -34,6 +36,7 @@ if node:
 store = (root / "assets/js/store.js").read_text(encoding="utf-8")
 gate = (root / "assets/js/reward-gate.js").read_text(encoding="utf-8")
 ads = (root / "assets/js/rewarded-ads.js").read_text(encoding="utf-8")
+display_ads = (root / "assets/js/ads.js").read_text(encoding="utf-8")
 for marker in ['"creator-starter-guide":5','"content-templates":5','"first-audience":10']:
     if marker not in store.replace(" ", "") or marker not in gate.replace(" ", ""):
         errors.append(f"Reward policy missing or inconsistent: {marker}")
@@ -43,6 +46,8 @@ if "localStorage" in gate:
     errors.append("reward-gate.js must not trust localStorage for entitlement")
 if "functions/v1/soutak-reward" not in gate:
     errors.append("reward-gate.js must use the server-side reward function")
+if "مساحة إعلانية تجريبية" in display_ads or "مزود الإعلانات غير مهيأ" in display_ads:
+    errors.append("Display ad code must not render demo or configuration placeholders")
 
 for forbidden_resource in ["downloads/creator-starter-guide.md", "downloads/content-templates.md", "downloads/first-audience-roadmap.md"]:
     if (root / forbidden_resource).exists():
