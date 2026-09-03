@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>https://motshib-jpg.github.io/soutak-plus/</loc></url>
-<url><loc>https://motshib-jpg.github.io/soutak-plus/content.html</loc></url>
-<url><loc>https://motshib-jpg.github.io/soutak-plus/products.html</loc></url>
-<url><loc>https://motshib-jpg.github.io/soutak-plus/services.html</loc></url>
-<url><loc>https://motshib-jpg.github.io/soutak-plus/sponsors.html</loc></url>
-<url><loc>https://motshib-jpg.github.io/soutak-plus/about.html</loc></url>
-<url><loc>https://motshib-jpg.github.io/soutak-plus/contact.html</loc></url>
+<url><loc>https://soutak-plus.vercel.app/</loc></url>
+<url><loc>https://soutak-plus.vercel.app/content.html</loc></url>
+<url><loc>https://soutak-plus.vercel.app/products.html</loc></url>
+<url><loc>https://soutak-plus.vercel.app/services.html</loc></url>
+<url><loc>https://soutak-plus.vercel.app/sponsors.html</loc></url>
+<url><loc>https://soutak-plus.vercel.app/about.html</loc></url>
+<url><loc>https://soutak-plus.vercel.app/contact.html</loc></url>
+<url><loc>https://soutak-plus.vercel.app/privacy.html</loc></url>
+<url><loc>https://soutak-plus.vercel.app/terms.html</loc></url>
 </urlset>
