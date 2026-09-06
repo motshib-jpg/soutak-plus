@@ -1,5 +1,7 @@
 (async()=>{
   const db=window.SoutakDB;
+  const articleUrl=slug=>`articles/${encodeURIComponent(slug)}.html`;
+  const articleCanonical=slug=>`https://soutak-plus.vercel.app/articles/${encodeURIComponent(slug)}.html`;
   async function posts(){
     if(!db?.enabled) return [];
     const {data,error}=await db.client.from("soutak_posts").select("slug,title,excerpt,body,published_at,updated_at").eq("status","published").order("published_at",{ascending:false});
@@ -12,7 +14,7 @@
   if(document.body.dataset.page==="content"){
     const grid=document.getElementById("postsGrid");
     if(grid && list.length){
-      grid.innerHTML=list.map(p=>`<article class="post-card"><div class="card-body"><span class="tag">مقال</span><h3>${e(p.title)}</h3><p>${e(p.excerpt)}</p><div class="card-foot"><small>${formatDate(p.published_at)}</small><a class="btn ghost small" href="post.html?slug=${encodeURIComponent(p.slug)}">اقرأ المقال</a></div></div></article>`).join("");
+      grid.innerHTML=list.map(p=>`<article class="post-card"><div class="card-body"><span class="tag">مقال</span><h3>${e(p.title)}</h3><p>${e(p.excerpt)}</p><div class="card-foot"><small>${formatDate(p.published_at)}</small><a class="btn ghost small" href="${articleUrl(p.slug)}">اقرأ المقال</a></div></div></article>`).join("");
       grid.removeAttribute("data-fallback");
     }
   }
@@ -35,7 +37,7 @@
   function related(currentSlug){
     const items=list.filter(x=>x.slug!==currentSlug).slice(0,3);
     if(!items.length) return "";
-    return `<section class="article-related"><span class="section-kicker">اقرأ أيضًا</span><h2>مقالات قد تساعدك في الخطوة التالية</h2><div class="grid3">${items.map(x=>`<article class="post-card"><div class="card-body"><h3>${e(x.title)}</h3><p>${e(x.excerpt)}</p><div class="card-foot"><a class="btn ghost small" href="post.html?slug=${encodeURIComponent(x.slug)}">اقرأ</a></div></div></article>`).join("")}</div></section>`;
+    return `<section class="article-related"><span class="section-kicker">اقرأ أيضًا</span><h2>مقالات قد تساعدك في الخطوة التالية</h2><div class="grid3">${items.map(x=>`<article class="post-card"><div class="card-body"><h3>${e(x.title)}</h3><p>${e(x.excerpt)}</p><div class="card-foot"><a class="btn ghost small" href="${articleUrl(x.slug)}">اقرأ</a></div></div></article>`).join("")}</div></section>`;
   }
 
   function setMeta(p){
@@ -43,7 +45,7 @@
     const desc=document.querySelector('meta[name="description"]')||document.head.appendChild(Object.assign(document.createElement("meta"),{name:"description"}));
     desc.setAttribute("content",p.excerpt||"");
     const canonical=document.querySelector('link[rel="canonical"]')||document.head.appendChild(Object.assign(document.createElement("link"),{rel:"canonical"}));
-    const url=`https://soutak-plus.vercel.app/post.html?slug=${encodeURIComponent(p.slug)}`;
+    const url=articleCanonical(p.slug);
     canonical.setAttribute("href",url);
     setOg("og:title",p.title); setOg("og:description",p.excerpt||""); setOg("og:url",url); setOg("og:type","article");
     const schema=document.createElement("script");
