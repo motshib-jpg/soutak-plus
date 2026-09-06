@@ -7,6 +7,7 @@
     "first-audience": 10
   };
 
+  await window.SOUTAK_RUNTIME_READY?.catch(() => ({}));
   await loadScript("assets/js/rewarded-ads.js");
   const db = window.SoutakDB;
   const slug = new URLSearchParams(location.search).get("slug");
@@ -49,7 +50,7 @@
           <div class="reward-progress"><i id="rewardProgressBar" style="width:0%"></i></div>
           <p class="muted reward-policy">الاستحقاق محفوظ في الخادم لحسابك. تعديل بيانات المتصفح لا يفتح المحتوى. الإعلان لا يُحتسب إلا بعد حدث منح المكافأة.</p>
           <div class="reward-actions" id="rewardActions"></div>
-          <div class="form-status" id="rewardStatus"></div>
+          <div class="form-status" id="rewardStatus" role="status" aria-live="polite"></div>
         </div>
         <div class="resource-reader locked" id="resourceReader"><div class='locked-message'>🔒 أكمل إعلانات المكافأة لفتح المحتوى.</div></div>
       </div>
@@ -146,6 +147,7 @@
   });
 
   async function rewardApi(action, extra = {}) {
+    await window.SOUTAK_RUNTIME_READY?.catch(() => ({}));
     const { data: { session: currentSession } } = await db.client.auth.getSession();
     if (!currentSession?.access_token) throw new Error("auth_required");
     const runtime = window.SOUTAK_RUNTIME_CONFIG || {};
