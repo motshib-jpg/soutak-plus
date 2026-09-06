@@ -1,12 +1,15 @@
 (() => {
-  const base = window.SOUTAK_CONFIG?.ads?.rewarded || {};
-  const runtime = window.SOUTAK_RUNTIME_CONFIG || {};
-  const cfg = {
-    provider: "google_ad_manager",
-    adUnitPath: runtime.rewardedAdUnitPath || base.adUnitPath || "",
-    enabled: Boolean(runtime.rewardedAdUnitPath || (base.enabled && base.adUnitPath))
-  };
   const state = { readyEvent: null, slot: null, loading: false, resolved: false };
+
+  function getCfg() {
+    const base = window.SOUTAK_CONFIG?.ads?.rewarded || {};
+    const runtime = window.SOUTAK_RUNTIME_CONFIG || {};
+    return {
+      provider: "google_ad_manager",
+      adUnitPath: runtime.rewardedAdUnitPath || base.adUnitPath || "",
+      enabled: Boolean(runtime.rewardedAdUnitPath || (base.enabled && base.adUnitPath))
+    };
+  }
 
   function loadGPT() {
     return new Promise((resolve, reject) => {
@@ -30,6 +33,8 @@
   }
 
   async function showOneRewardedAd() {
+    await window.SOUTAK_RUNTIME_READY?.catch(() => ({}));
+    const cfg = getCfg();
     if (!cfg.enabled || cfg.provider !== "google_ad_manager" || !cfg.adUnitPath) throw new Error("rewarded_not_configured");
     if (state.loading) throw new Error("rewarded_busy");
     state.loading = true;
@@ -105,7 +110,10 @@
   }
 
   window.SoutakRewardedAds = {
-    configured: Boolean(cfg.enabled && cfg.provider === "google_ad_manager" && cfg.adUnitPath),
+    get configured() {
+      const cfg = getCfg();
+      return Boolean(cfg.enabled && cfg.provider === "google_ad_manager" && cfg.adUnitPath);
+    },
     showOneRewardedAd
   };
 })();
