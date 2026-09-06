@@ -31,7 +31,7 @@
   const header = document.getElementById("siteHeader");
   if (header) header.innerHTML = `<header class="site-header" id="header"><div class="container nav">
     <a class="brand" href="${root}index.html" aria-label="صوتك+ الرئيسية"><span class="mark">+</span><span>صوتك+</span></a>
-    <nav class="menu" id="menu" aria-label="التنقل الرئيسي">${links.map(([id,url,label])=>`<a class="${page===id?"active":""}" href="${url}">${label}</a>`).join("")}<a class="${page==="contact"?"active":""}" href="${root}contact.html">تواصل</a></nav>
+    <nav class="menu" id="menu" aria-label="التنقل الرئيسي">${links.map(([id,url,label])=>`<a class="${page===id?"active":""}" ${page===id?'aria-current="page"':''} href="${url}">${label}</a>`).join("")}<a class="${page==="contact"?"active":""}" ${page==="contact"?'aria-current="page"':''} href="${root}contact.html">تواصل</a></nav>
     <div class="nav-actions"><a class="btn primary" href="${root}content.html">ابدأ القراءة</a><button class="mobile-btn" id="mobileBtn" aria-label="فتح القائمة" aria-expanded="false" aria-controls="menu">☰</button></div>
   </div></header>`;
 
@@ -50,6 +50,47 @@
       const slug=u.searchParams.get("slug");
       if(slug) a.href=`${root}articles/${encodeURIComponent(slug)}.html`;
     } catch(_) {}
+  });
+
+  // Add a consistent trust signal to static article pages without requiring duplicated markup.
+  if (location.pathname.startsWith("/articles/")) {
+    const article = document.querySelector("article.article-wrap");
+    const meta = article?.querySelector(".article-meta-row");
+    if (article && meta && !article.querySelector(".article-byline")) {
+      const byline = document.createElement("div");
+      byline.className = "article-byline";
+      byline.innerHTML = `<span class="byline-mark">ص+</span><span><b>إعداد فريق تحرير صوتك+</b><small>محتوى عملي يُراجع من حيث الوضوح والفائدة والشفافية.</small></span><a href="${root}editorial.html">منهج التحرير</a>`;
+      meta.insertAdjacentElement("afterend", byline);
+    }
+    document.querySelectorAll('script[type="application/ld+json"]').forEach(script=>{
+      try {
+        const data=JSON.parse(script.textContent||"{}");
+        if(data['@type']==='Article' && !data.author){
+          data.author={"@type":"Organization","name":"فريق تحرير صوتك+","url":"https://soutak-plus.vercel.app/editorial.html"};
+          script.textContent=JSON.stringify(data);
+        }
+      } catch(_) {}
+    });
+  }
+
+  // Make privacy expectations visible next to every public submission form.
+  document.querySelectorAll('form[id$="Form"]').forEach(form=>{
+    const card=form.closest('.form-card,.newsletter') || form.parentElement;
+    if(card && !card.querySelector('.form-privacy')){
+      const note=document.createElement('p');
+      note.className='form-privacy';
+      note.innerHTML=`بإرسال هذا النموذج، ستتم معالجة البيانات للغرض الموضح فقط وفق <a href="${root}privacy.html">سياسة الخصوصية</a>.`;
+      form.insertAdjacentElement('afterend',note);
+    }
+  });
+  document.querySelectorAll('.form-status').forEach(el=>{
+    el.setAttribute('role','status');
+    el.setAttribute('aria-live','polite');
+  });
+  document.querySelectorAll('a[target="_blank"]').forEach(a=>{
+    const rel=new Set((a.getAttribute('rel')||'').split(/\s+/).filter(Boolean));
+    rel.add('noopener'); rel.add('noreferrer');
+    a.setAttribute('rel',[...rel].join(' '));
   });
 
   const menu = document.getElementById("menu"), btn = document.getElementById("mobileBtn");
