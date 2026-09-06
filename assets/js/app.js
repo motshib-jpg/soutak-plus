@@ -43,6 +43,15 @@
     <div><h4>الخصوصية والشفافية</h4><a href="${root}privacy.html">سياسة الخصوصية</a><a href="${root}terms.html">الشروط والأحكام</a><a href="${root}editorial.html#ads">الإعلانات والشفافية</a></div>
   </div><div class="container copyright"><span>© ${new Date().getFullYear()} صوتك+ — جميع الحقوق محفوظة.</span><span>لا نقدم وعودًا مضمونة بالشهرة أو الدخل أو النتائج التجارية.</span></div></footer>`;
 
+  // Preserve old bookmarks while making every visible article link point to its canonical static page.
+  document.querySelectorAll('a[href*="post.html?slug="]').forEach(a=>{
+    try {
+      const u=new URL(a.getAttribute("href"), location.href);
+      const slug=u.searchParams.get("slug");
+      if(slug) a.href=`${root}articles/${encodeURIComponent(slug)}.html`;
+    } catch(_) {}
+  });
+
   const menu = document.getElementById("menu"), btn = document.getElementById("mobileBtn");
   btn?.addEventListener("click",()=>{
     const open = menu.classList.toggle("open");
