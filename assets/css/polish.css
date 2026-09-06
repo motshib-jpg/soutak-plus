@@ -29,5 +29,8 @@ main{min-height:70vh}
 .site-footer{background:rgba(4,7,13,.35)}
 .footer a:hover{color:#d9e0ec}.copyright{line-height:1.8}
 .skip-link{position:fixed;top:-80px;right:20px;z-index:2000;background:#fff;color:#111;padding:10px 14px;border-radius:8px}.skip-link:focus{top:12px}
+/* Keep important content visible even if animation JavaScript is delayed or unavailable. */
+.reveal{opacity:1!important;transform:none!important}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid rgba(125,211,252,.9);outline-offset:3px}
 @media(max-width:950px){.value-strip,.reading-grid,.steps{grid-template-columns:1fr 1fr}.contact-intro{grid-template-columns:1fr}}
 @media(max-width:620px){.value-strip,.reading-grid,.steps{grid-template-columns:1fr}.editorial-box,.trust-box,.info-box{padding:20px}.article-wrap p{font-size:15px}.post-card h3,.service-card h3,.product-card h3{font-size:17px}}
