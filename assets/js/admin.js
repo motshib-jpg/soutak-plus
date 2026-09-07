@@ -135,6 +135,34 @@
    const p=document.createElement("p");p.className="muted";p.textContent=description;
    panel.append(h,p);document.querySelector(".auth-card")?.insertBefore(panel,status||null);return panel;
  }
+ function qrImageSource(rawValue){
+   const raw=String(rawValue||"").trim();
+   if(!raw)return null;
+   if(/^data:image\//i.test(raw)||/^blob:/i.test(raw))return {src:raw,revoke:null};
+   try{
+     const url=new URL(raw,SUPABASE_URL||location.origin);
+     if(/^https:$/.test(url.protocol)&&url.origin===new URL(SUPABASE_URL).origin)return {src:url.href,revoke:null};
+   }catch{}
+   // Supabase TOTP enrollment commonly returns raw SVG XML. An <img> cannot
+   // render XML assigned directly as its src, so keep it in an image-only Blob.
+   if(/<svg[\s>]/i.test(raw)){
+     const src=URL.createObjectURL(new Blob([raw],{type:"image/svg+xml"}));
+     return {src,revoke:()=>URL.revokeObjectURL(src)};
+   }
+   return null;
+ }
+ function addManualTotpFallback(panel,totp,open=false){
+   const secret=String(totp?.secret||"").trim();
+   const uri=String(totp?.uri||"").trim();
+   if(!secret&&!uri)return null;
+   const details=document.createElement("details");details.className="mfa-manual";details.open=open;
+   const summary=document.createElement("summary");summary.textContent="لا يمكنك مسح الرمز؟ أضف المفتاح يدويًا";
+   const note=document.createElement("p");note.textContent="أدخل هذه البيانات في تطبيق المصادقة فقط. لا تشاركها مع أي شخص.";
+   details.append(summary,note);
+   const addValue=(label,value)=>{if(!value)return;const row=document.createElement("div");row.className="mfa-manual-value";const strong=document.createElement("strong");strong.textContent=label;const code=document.createElement("code");code.dir="ltr";code.textContent=value;row.append(strong,code);details.append(row)};
+   addValue("المفتاح السري",secret);addValue("رابط otpauth",uri);
+   panel.append(details);return details;
+ }
  async function renderMfaChallenge(factorId){
    const panel=createMfaPanel("التحقق بخطوتين","أدخل الرمز المكوّن من 6 أرقام من تطبيق المصادقة.");
    const form=document.createElement("form");form.className="form-grid";form.autocomplete="off";
@@ -148,14 +176,22 @@
    const factors=await factorsFor(s);
    for(const f of factors.filter(x=>x.factor_type==="totp"&&x.status!=="verified")){try{await unenrollFactor(s,f.id)}catch{}}
    const data=await enrollTotp(s);
-   if(!data?.id||!data?.totp?.qr_code)throw new Error("enroll_failed");
+   if(!data?.id||!data?.totp)throw new Error("enroll_failed");
    const panel=createMfaPanel("فعّل التحقق بخطوتين","امسح رمز QR بتطبيق Google Authenticator أو Microsoft Authenticator، ثم أدخل الرمز الظاهر.");
-   const qr=document.createElement("img");qr.className="mfa-qr";qr.alt="رمز QR لإعداد المصادقة الثنائية";qr.src=data.totp.qr_code;
    const warning=document.createElement("p");warning.className="policy-note";warning.textContent="لا تشارك رمز QR مع أي شخص.";
+   const source=qrImageSource(data.totp.qr_code);
+   let qr=null,manual=null;
+   const showManual=()=>{if(qr?.parentElement)qr.remove();source?.revoke?.();if(!manual)manual=addManualTotpFallback(panel,data.totp,true);if(manual)manual.open=true;warning.textContent="تعذر عرض رمز QR. أضف المفتاح يدويًا في تطبيق المصادقة.";};
+   if(source){
+     qr=document.createElement("img");qr.className="mfa-qr";qr.alt="رمز QR لإعداد المصادقة الثنائية";qr.decoding="async";qr.src=source.src;
+     qr.addEventListener("error",showManual,{once:true});
+     addEventListener("pagehide",()=>source.revoke?.(),{once:true});
+   }
+   if(!qr&&!String(data.totp.secret||"").trim()&&!String(data.totp.uri||"").trim())throw new Error("enroll_qr_unavailable");
    const form=document.createElement("form");form.className="form-grid";form.autocomplete="off";
    const input=document.createElement("input");input.inputMode="numeric";input.autocomplete="one-time-code";input.placeholder="الرمز المكوّن من 6 أرقام";input.maxLength=6;input.pattern="[0-9]{6}";input.required=true;
    const btn=document.createElement("button");btn.type="submit";btn.className="btn primary";btn.textContent="تفعيل وحماية الحساب";
-   form.append(input,btn);panel.append(qr,warning,form);
+   form.append(input,btn);if(qr)panel.append(qr);panel.append(warning);if(!qr)manual=addManualTotpFallback(panel,data.totp,true);else manual=addManualTotpFallback(panel,data.totp,false);panel.append(form);
    form.addEventListener("submit",async e=>{e.preventDefault();btn.disabled=true;try{await verifyTotp(data.id,input.value.trim());setStatus("تم تفعيل التحقق بخطوتين بنجاح.",true);location.replace("admin.html")}catch{setStatus("تعذر التفعيل. تحقق من الرمز وحاول مرة أخرى.");input.select()}finally{btn.disabled=false}});
  }
  async function continueAdminLogin(s){
@@ -227,3 +263,4 @@
  function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
  await refresh();
 })();
+
