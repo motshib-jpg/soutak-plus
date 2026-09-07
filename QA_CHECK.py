@@ -3,7 +3,7 @@ import re, sys, subprocess, shutil
 
 root = Path(__file__).resolve().parent
 errors = []
-all_htmls = list(root.glob("*.html"))
+all_htmls = list(root.glob("*.html")) + list((root / "articles").glob("*.html"))
 # Search Console verification files are exact machine-readable artifacts, not site pages.
 verification_htmls = {p for p in all_htmls if re.fullmatch(r"google[a-zA-Z0-9_-]+\.html", p.name)}
 htmls = [p for p in all_htmls if p not in verification_htmls]
@@ -26,8 +26,25 @@ for hp in htmls:
         if ref.startswith(("http:", "https:", "mailto:", "tel:", "javascript:", "/api/")):
             continue
         target = ref.lstrip("/")
-        if not (root / target).exists():
+        if not (hp.parent / target).resolve().exists() and not (root / target).exists():
             errors.append(f"{hp.name}: missing local reference {ref}")
+
+# Article pages must remain substantial, dated, and attributable. This is not a
+# substitute for editorial judgment, but it prevents thin or incomplete pages
+# from accidentally being deployed as indexable content.
+article_pages = list((root / "articles").glob("*.html"))
+for article in article_pages:
+    txt = article.read_text(encoding="utf-8")
+    plain = re.sub(r"<[^>]+>", " ", txt)
+    words = len(re.findall(r"\S+", plain))
+    if words < 400:
+        errors.append(f"{article.name}: article is too short ({words} words)")
+    if len(re.findall(r"<h2[ >]", txt)) < 6:
+        errors.append(f"{article.name}: insufficient section structure")
+    if 'datePublished' not in txt or 'dateModified' not in txt:
+        errors.append(f"{article.name}: missing Article publication dates")
+    if 'article-byline' not in (root / "assets/js/app.js").read_text(encoding="utf-8"):
+        errors.append("Article attribution enhancement is missing from app.js")
 
 # Verification artifacts must remain tiny and must not accidentally become content pages.
 for vp in verification_htmls:
