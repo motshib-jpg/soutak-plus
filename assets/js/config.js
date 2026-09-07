@@ -1,6 +1,6 @@
 window.SOUTAK_CONFIG = {
-  supabaseUrl: "https://vvrdchwlmwpbsxsmcthp.supabase.co",
-  supabasePublishableKey: "sb_publishable_oIOIyaajAgqJQ_Nb4EJ3pA_fc-EUaTM",
+  supabaseUrl: "https://lauhvvrjqiqaxfiwswqw.supabase.co",
+  supabasePublishableKey: "sb_publishable_c9Wg0IOOnUA2KQwTPtqPzg_ZcOepPBR",
   siteUrl: "https://soutak-plus.vercel.app",
   analyticsEnabled: false,
   ads: {
