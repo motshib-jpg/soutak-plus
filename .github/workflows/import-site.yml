@@ -20,66 +20,77 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test -f index.html
-          test -f vercel.json
-          test -f account.html
-          test -f admin.html
-          test -f login.html
-          test -f assets/js/account.js
-          test -f assets/js/admin.js
-          test -f assets/js/forms.js
-          test -f assets/js/reward-gate.js
-          test -f assets/js/rewarded-ads.js
-          test -f supabase/functions/soutak-reward/index.ts
-          test -f supabase/functions/soutak-public-submit/index.ts
 
-          # Protected resources must never be shipped as public files.
-          test ! -f downloads/creator-starter-guide.md
-          test ! -f downloads/content-templates.md
-          test ! -f downloads/first-audience-roadmap.md
-          test ! -f database/schema.sql
+          need_file() {
+            if [ ! -f "$1" ]; then echo "Missing required file: $1" >&2; exit 1; fi
+          }
+          need_fixed() {
+            if ! grep -Fq -- "$1" "$2"; then echo "Missing security invariant in $2: $3" >&2; exit 1; fi
+          }
+          need_regex() {
+            if ! grep -Eq -- "$1" "$2"; then echo "Missing security invariant in $2: $3" >&2; exit 1; fi
+          }
 
-          # Reward policy and server-bound access.
-          grep -q '"creator-starter-guide":5' assets/js/store.js
-          grep -q '"content-templates":5' assets/js/store.js
-          grep -q '"first-audience":10' assets/js/store.js
-          grep -q 'rewardedSlotGranted' assets/js/rewarded-ads.js
-          grep -q 'functions/v1/soutak-reward' assets/js/reward-gate.js
-          if grep -q 'localStorage' assets/js/reward-gate.js; then
-            echo 'Client-side entitlement detected.' >&2
-            exit 1
+          for f in \
+            index.html vercel.json robots.txt sitemap.xml account.html admin.html login.html \
+            assets/js/account.js assets/js/admin.js assets/js/forms.js assets/js/reward-gate.js assets/js/rewarded-ads.js \
+            supabase/functions/soutak-reward/index.ts supabase/functions/soutak-public-submit/index.ts; do
+            need_file "$f"
+          done
+
+          # Protected resources and obsolete bootstrap code must not ship publicly.
+          for f in \
+            downloads/creator-starter-guide.md \
+            downloads/content-templates.md \
+            downloads/first-audience-roadmap.md \
+            database/schema.sql; do
+            if [ -f "$f" ]; then echo "Forbidden production file present: $f" >&2; exit 1; fi
+          done
+
+          # Reward policy and server-bound entitlement.
+          need_regex '"creator-starter-guide"[[:space:]]*:[[:space:]]*5' assets/js/store.js 'creator guide requires 5 rewards'
+          need_regex '"content-templates"[[:space:]]*:[[:space:]]*5' assets/js/store.js 'templates require 5 rewards'
+          need_regex '"first-audience"[[:space:]]*:[[:space:]]*10' assets/js/store.js 'first audience requires 10 rewards'
+          need_fixed 'rewardedSlotGranted' assets/js/rewarded-ads.js 'reward is granted only from rewarded-slot event'
+          need_fixed 'functions/v1/soutak-reward' assets/js/reward-gate.js 'reward access uses server Edge Function'
+          if grep -Fq 'localStorage' assets/js/reward-gate.js; then
+            echo 'Client-side entitlement detected in reward-gate.js' >&2; exit 1
           fi
 
-          # Public writes must use the hardened Edge Function, not direct public RPCs.
-          grep -q 'functions/v1/soutak-public-submit' assets/js/forms.js
+          # Public writes must use the hardened server endpoint only.
+          need_fixed 'functions/v1/soutak-public-submit' assets/js/forms.js 'forms use hardened submission Edge Function'
           if grep -Eq 'soutak_submit_(sponsor|service|contact)_.*public|soutak_subscribe_public' assets/js/forms.js; then
-            echo 'Legacy public write RPC detected.' >&2
-            exit 1
+            echo 'Legacy direct public write RPC detected in forms.js' >&2; exit 1
           fi
 
-          # Admin access must require Supabase admin authorization and MFA/AAL2.
-          grep -q 'soutak_is_admin' assets/js/admin.js
-          grep -q 'aal2' assets/js/admin.js
-          grep -q 'mfa' assets/js/admin.js
+          # Admin must use authorization + MFA/AAL2.
+          need_fixed 'soutak_is_admin' assets/js/admin.js 'admin authorization check'
+          need_fixed 'aal2' assets/js/admin.js 'AAL2 requirement'
+          need_fixed '.auth.mfa.' assets/js/admin.js 'MFA flow'
 
-          # Browser hardening must remain in place.
-          grep -q "script-src-attr 'none'" vercel.json
-          grep -q 'Strict-Transport-Security' vercel.json
-          grep -q 'X-Frame-Options' vercel.json
-          grep -q 'no-store' vercel.json
-          grep -q 'Disallow: /admin.html' robots.txt
-          grep -q 'Disallow: /product.html' robots.txt
-          grep -q 'soutak-plus.vercel.app' sitemap.xml
+          # Browser and crawler hardening.
+          need_fixed "script-src-attr 'none'" vercel.json 'inline event handlers blocked by CSP'
+          need_fixed 'Strict-Transport-Security' vercel.json 'HSTS enabled'
+          need_fixed 'X-Frame-Options' vercel.json 'clickjacking protection'
+          need_fixed 'no-store' vercel.json 'sensitive routes not cached'
+          need_fixed 'Disallow: /admin.html' robots.txt 'admin blocked from crawlers'
+          need_fixed 'Disallow: /login.html' robots.txt 'login blocked from crawlers'
+          need_fixed 'Disallow: /account.html' robots.txt 'account blocked from crawlers'
+          need_fixed 'Disallow: /product.html' robots.txt 'gated product route blocked from crawlers'
+          need_fixed 'https://soutak-plus.vercel.app/sitemap.xml' robots.txt 'production sitemap declared'
+          need_fixed 'https://soutak-plus.vercel.app/' sitemap.xml 'production URLs in sitemap'
 
-          # Never commit secret-looking Supabase server keys.
-          if grep -R -n -E 'sb_secret_[A-Za-z0-9_-]{12,}|service_role["'"'[:space:]]*[:=]["'"'][A-Za-z0-9._-]{20,}' --exclude-dir=.git .; then
-            echo 'Potential server secret committed.' >&2
-            exit 1
+          # Never commit actual server-secret material. Environment variable names are allowed.
+          if grep -R -n -E 'sb_secret_[A-Za-z0-9_-]{12,}' --exclude-dir=.git .; then
+            echo 'Potential Supabase secret key committed.' >&2; exit 1
+          fi
+          if grep -R -n -E '(SERVICE_ROLE_KEY|service_role_key)[[:space:]]*[:=][[:space:]]*["'"'][A-Za-z0-9._-]{20,}["'"']' --exclude-dir=.git .; then
+            echo 'Potential hard-coded service-role credential committed.' >&2; exit 1
           fi
 
-          if grep -R -n -E 'YOUR-DOMAIN\.example|motshib-jpg\.github\.io/soutak-plus|وضع تجريبي|نسخة تجريبية' --include='*.html' --include='*.js' --include='robots.txt' --include='sitemap.xml' .; then
-            echo 'Production placeholder or demo text found.' >&2
-            exit 1
+          if grep -R -n -E 'YOUR-DOMAIN\.example|motshib-jpg\.github\.io/soutak-plus|وضع تجريبي|نسخة تجريبية' \
+            --include='*.html' --include='*.js' --include='robots.txt' --include='sitemap.xml' .; then
+            echo 'Production placeholder or demo text found.' >&2; exit 1
           fi
 
           python3 QA_CHECK.py
