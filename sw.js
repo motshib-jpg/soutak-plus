@@ -1,4 +1,4 @@
-const CACHE_VERSION = "soutakplus-v12-adsense-ready";
+const CACHE_VERSION = "soutakplus-v13-seo-polish";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const CORE = [
   "/",
