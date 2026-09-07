@@ -8,3 +8,4 @@ Disallow: /post.html
 Disallow: /api/
 
 Sitemap: https://soutak-plus.vercel.app/sitemap.xml
+Sitemap: https://soutak-plus.vercel.app/feed.xml
