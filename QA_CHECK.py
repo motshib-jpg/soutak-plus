@@ -3,9 +3,12 @@ import re, sys, subprocess, shutil
 
 root = Path(__file__).resolve().parent
 errors = []
-htmls = list(root.glob("*.html"))
+all_htmls = list(root.glob("*.html"))
+# Search Console verification files are exact machine-readable artifacts, not site pages.
+verification_htmls = {p for p in all_htmls if re.fullmatch(r"google[a-zA-Z0-9_-]+\.html", p.name)}
+htmls = [p for p in all_htmls if p not in verification_htmls]
 if not htmls:
-    errors.append("No HTML files found.")
+    errors.append("No HTML pages found.")
 
 for hp in htmls:
     txt = hp.read_text(encoding="utf-8")
@@ -26,6 +29,12 @@ for hp in htmls:
         if not (root / target).exists():
             errors.append(f"{hp.name}: missing local reference {ref}")
 
+# Verification artifacts must remain tiny and must not accidentally become content pages.
+for vp in verification_htmls:
+    txt = vp.read_text(encoding="utf-8")
+    if len(txt) > 512 or "google-site-verification:" not in txt:
+        errors.append(f"{vp.name}: unexpected verification file content")
+
 node = shutil.which("node")
 if node:
     for js in (root / "assets/js").glob("*.js"):
@@ -37,6 +46,8 @@ store = (root / "assets/js/store.js").read_text(encoding="utf-8")
 gate = (root / "assets/js/reward-gate.js").read_text(encoding="utf-8")
 ads = (root / "assets/js/rewarded-ads.js").read_text(encoding="utf-8")
 display_ads = (root / "assets/js/ads.js").read_text(encoding="utf-8")
+forms = (root / "assets/js/forms.js").read_text(encoding="utf-8")
+admin = (root / "assets/js/admin.js").read_text(encoding="utf-8")
 for marker in ['"creator-starter-guide":5','"content-templates":5','"first-audience":10']:
     if marker not in store.replace(" ", "") or marker not in gate.replace(" ", ""):
         errors.append(f"Reward policy missing or inconsistent: {marker}")
@@ -46,6 +57,10 @@ if "localStorage" in gate:
     errors.append("reward-gate.js must not trust localStorage for entitlement")
 if "functions/v1/soutak-reward" not in gate:
     errors.append("reward-gate.js must use the server-side reward function")
+if "functions/v1/soutak-public-submit" not in forms:
+    errors.append("Public forms must use the hardened submission Edge Function")
+if "soutak_is_admin" not in admin or "aal2" not in admin or ".auth.mfa." not in admin:
+    errors.append("Admin flow must require authorization and MFA/AAL2")
 if "مساحة إعلانية تجريبية" in display_ads or "مزود الإعلانات غير مهيأ" in display_ads:
     errors.append("Display ad code must not render demo or configuration placeholders")
 
@@ -53,9 +68,9 @@ for forbidden_resource in ["downloads/creator-starter-guide.md", "downloads/cont
     if (root / forbidden_resource).exists():
         errors.append(f"Protected resource must not be public: {forbidden_resource}")
 
-for forbidden in ["checkout.html", "payment.html", "subscription.html"]:
+for forbidden in ["checkout.html", "payment.html", "subscription.html", "database/schema.sql"]:
     if (root / forbidden).exists():
-        errors.append(f"Forbidden paid-access file present: {forbidden}")
+        errors.append(f"Forbidden production file present: {forbidden}")
 
 if not (root / "vercel.json").exists():
     errors.append("vercel.json is required for production hosting")
@@ -67,4 +82,4 @@ if errors:
     for e in errors:
         print("-", e)
     sys.exit(1)
-print(f"QA PASSED: {len(htmls)} HTML pages checked; server-side reward entitlement + 5/5/10 verified.")
+print(f"QA PASSED: {len(htmls)} HTML pages checked; verification artifacts preserved; server-side reward entitlement + 5/5/10 verified.")
