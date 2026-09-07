@@ -14,18 +14,22 @@ This file defines the non-negotiable production rules for Soutak+.
 
 - Every indexable page must be in `sitemap.xml`.
 - Every article must be linked from `content.html` and must receive at least one contextual inbound link from another public content page.
+- Every article canonical must also remain present in the RSS discovery feed.
 - Public content must remain static/indexable without login, database availability, or client-side rendering.
 - Canonicals must use the production origin consistently.
 - Search Console tracker remains the authoritative indexing monitor; repeated inspection is diagnostic, not a substitute for quality.
+- Google crawling/indexing is an external decision: never represent URL Inspection or repeated inspection as a guaranteed indexing request.
 
 ## 3. Production safety rule
 
 - `QA_CHECK.py` and `.github/workflows/import-site.yml` are permanent controls.
+- Automatic Vercel deployment from `main` must remain disabled (`git.deploymentEnabled.main=false`).
+- A production release is performed only after repository validation succeeds; production rollback remains available through immutable Vercel deployments.
+- Permanent CI must fail if the automatic-main freeze is removed.
 - Scheduled live monitoring must verify the deployed site, not only repository files.
 - Sensitive admin/login routes remain `noindex`, `no-store`, and isolated from third-party SDK CDNs.
 - Public reading pages must not regain Supabase SDK/client dependencies.
 - Never commit service-role keys, private secrets, or production credentials.
-- A failed validation is a release blocker operationally even if platform settings cannot technically enforce it yet.
 
 ## 4. Monetization rule
 
