@@ -1,0 +1,5 @@
+Contact: https://soutak-plus.vercel.app/contact.html
+Canonical: https://soutak-plus.vercel.app/.well-known/security.txt
+Policy: https://soutak-plus.vercel.app/privacy.html
+Preferred-Languages: ar, en
+Expires: 2027-09-07T00:00:00Z
