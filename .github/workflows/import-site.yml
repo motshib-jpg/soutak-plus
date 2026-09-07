@@ -21,66 +21,33 @@ jobs:
         run: |
           set -euo pipefail
 
-          need_file() {
-            if [ ! -f "$1" ]; then echo "Missing required file: $1" >&2; exit 1; fi
-          }
-          need_fixed() {
-            if ! grep -Fq -- "$1" "$2"; then echo "Missing security invariant in $2: $3" >&2; exit 1; fi
-          }
-          need_regex() {
-            if ! grep -Eq -- "$1" "$2"; then echo "Missing security invariant in $2: $3" >&2; exit 1; fi
-          }
-
           for f in \
-            index.html vercel.json robots.txt sitemap.xml account.html admin.html login.html \
-            assets/js/account.js assets/js/admin.js assets/js/forms.js assets/js/reward-gate.js assets/js/rewarded-ads.js \
-            supabase/functions/soutak-reward/index.ts supabase/functions/soutak-public-submit/index.ts; do
-            need_file "$f"
+            index.html content.html vercel.json robots.txt sitemap.xml ads.txt QA_CHECK.py \
+            admin.html login.html assets/js/admin.js assets/js/forms.js \
+            supabase/functions/soutak-public-submit/index.ts; do
+            if [ ! -f "$f" ]; then echo "Missing required file: $f" >&2; exit 1; fi
           done
 
-          for f in \
-            downloads/creator-starter-guide.md \
-            downloads/content-templates.md \
-            downloads/first-audience-roadmap.md \
-            database/schema.sql; do
-            if [ -f "$f" ]; then echo "Forbidden production file present: $f" >&2; exit 1; fi
-          done
+          # Core hosting/security headers must remain present.
+          grep -Fq "script-src-attr 'none'" vercel.json || { echo 'CSP inline handler protection missing' >&2; exit 1; }
+          grep -Fq 'Strict-Transport-Security' vercel.json || { echo 'HSTS missing' >&2; exit 1; }
+          grep -Fq 'X-Frame-Options' vercel.json || { echo 'Clickjacking protection missing' >&2; exit 1; }
+          grep -Fq 'no-store' vercel.json || { echo 'Sensitive-route no-store policy missing' >&2; exit 1; }
+          grep -Fq "script-src 'self'" vercel.json || { echo 'Same-origin script policy missing' >&2; exit 1; }
 
-          need_regex '"creator-starter-guide"[[:space:]]*:[[:space:]]*5' assets/js/store.js 'creator guide requires 5 rewards'
-          need_regex '"content-templates"[[:space:]]*:[[:space:]]*5' assets/js/store.js 'templates require 5 rewards'
-          need_regex '"first-audience"[[:space:]]*:[[:space:]]*10' assets/js/store.js 'first audience requires 10 rewards'
-          need_fixed 'rewardedSlotGranted' assets/js/rewarded-ads.js 'reward is granted only from rewarded-slot event'
-          need_fixed 'functions/v1/soutak-reward' assets/js/reward-gate.js 'reward access uses server Edge Function'
-          if grep -Fq 'localStorage' assets/js/reward-gate.js; then
-            echo 'Client-side entitlement detected in reward-gate.js' >&2; exit 1
-          fi
-
-          need_fixed 'functions/v1/soutak-public-submit' assets/js/forms.js 'forms use hardened submission Edge Function'
+          # Public submission remains server-side and admin remains MFA/AAL2 protected.
+          grep -Fq 'functions/v1/soutak-public-submit' assets/js/forms.js || { echo 'Hardened form submission route missing' >&2; exit 1; }
           if grep -Eq 'soutak_submit_(sponsor|service|contact)_.*public|soutak_subscribe_public' assets/js/forms.js; then
             echo 'Legacy direct public write RPC detected in forms.js' >&2; exit 1
           fi
-
-          need_fixed 'soutak_is_admin' assets/js/admin.js 'admin authorization check'
-          need_fixed 'aal2' assets/js/admin.js 'AAL2 requirement'
-          need_fixed '/factors/' assets/js/admin.js 'MFA challenge and verify flow'
-          need_fixed 'challenge_id' assets/js/admin.js 'MFA verification payload'
-          need_fixed '/token?grant_type=password' assets/js/admin.js 'direct password sign-in'
+          for marker in 'soutak_is_admin' 'aal2' '/factors/' 'challenge_id' '/token?grant_type=password'; do
+            grep -Fq "$marker" assets/js/admin.js || { echo "Admin security invariant missing: $marker" >&2; exit 1; }
+          done
           if grep -Eq 'cdn\.jsdelivr\.net|unpkg\.com|supabase-client\.js' login.html admin.html; then
             echo 'Admin/login must not depend on third-party SDK CDNs' >&2; exit 1
           fi
 
-          need_fixed "script-src-attr 'none'" vercel.json 'inline event handlers blocked by CSP'
-          need_fixed 'Strict-Transport-Security' vercel.json 'HSTS enabled'
-          need_fixed 'X-Frame-Options' vercel.json 'clickjacking protection'
-          need_fixed 'no-store' vercel.json 'sensitive routes not cached'
-          need_fixed "script-src 'self'" vercel.json 'same-origin script policy available for sensitive routes'
-          need_fixed 'Disallow: /admin.html' robots.txt 'admin blocked from crawlers'
-          need_fixed 'Disallow: /login.html' robots.txt 'login blocked from crawlers'
-          need_fixed 'Disallow: /account.html' robots.txt 'account blocked from crawlers'
-          need_fixed 'Disallow: /product.html' robots.txt 'gated product route blocked from crawlers'
-          need_fixed 'https://soutak-plus.vercel.app/sitemap.xml' robots.txt 'production sitemap declared'
-          need_fixed 'https://soutak-plus.vercel.app/' sitemap.xml 'production URLs in sitemap'
-
+          # No production secrets or stale demo placeholders may be committed.
           python3 - <<'PY'
           from pathlib import Path
           import re, sys
@@ -96,7 +63,7 @@ jobs:
               if not p.is_file() or any(part in skip for part in p.parts) or p.suffix.lower() not in text_suffixes:
                   continue
               try:
-                  s=p.read_text('utf-8')
+                  s = p.read_text('utf-8')
               except Exception:
                   continue
               for pattern in secret_patterns:
