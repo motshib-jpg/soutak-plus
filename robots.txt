@@ -3,6 +3,8 @@ Allow: /
 Disallow: /admin.html
 Disallow: /login.html
 Disallow: /account.html
+Disallow: /product.html
+Disallow: /post.html
 Disallow: /api/
 
 Sitemap: https://soutak-plus.vercel.app/sitemap.xml
