@@ -100,6 +100,10 @@
       ]
     },
     {
+      "source": "/feed.xml",
+      "headers": [{"key":"Content-Type","value":"application/rss+xml; charset=utf-8"},{"key":"Cache-Control","value":"public, max-age=0, s-maxage=300, must-revalidate"}]
+    },
+    {
       "source": "/manifest.webmanifest",
       "headers": [{"key":"Content-Type","value":"application/manifest+json; charset=utf-8"}]
     }

@@ -187,6 +187,37 @@ for tmp in [
     if (root / tmp).exists():
         errors.append(f"Temporary workflow still present: {tmp}")
 
+
+# Survival baseline invariants.
+for required in ["RISK_REGISTER.md", "SURVIVAL_POLICY.md", "feed.xml", ".github/workflows/survival-monitor.yml"]:
+    if not (root / required).exists():
+        errors.append(f"Missing survival control: {required}")
+
+for article in article_pages:
+    if f'articles/{article.name}' not in content_html:
+        errors.append(f"{article.name}: missing link from content.html")
+
+pillars = ["seo-for-arabic-content-beginners.html","youtube-channel-without-showing-face.html","youtube-video-script-template.html","content-ideas-system.html","how-to-choose-content-niche.html"]
+for name in pillars:
+    txt = (root / "articles" / name).read_text(encoding="utf-8")
+    for marker in ['data-original-evidence="true"', 'class="source-list"', 'target="_blank" rel="noopener noreferrer"']:
+        if marker not in txt:
+            errors.append(f"{name}: missing pillar survival marker {marker}")
+    if txt.count('href="https://') < 2:
+        errors.append(f"{name}: pillar page needs multiple durable source links")
+
+feed = (root / "feed.xml").read_text(encoding="utf-8")
+for article in article_pages:
+    txt = article.read_text(encoding="utf-8")
+    m = re.search(r'<link rel="canonical" href="([^"]+)"', txt)
+    if not m or m.group(1) not in feed:
+        errors.append(f"{article.name}: missing from RSS feed")
+
+risk_text = (root / "RISK_REGISTER.md").read_text(encoding="utf-8")
+for marker in ["R01", "R07", "R19", "R20", "Irreducible external risks"]:
+    if marker not in risk_text:
+        errors.append(f"Risk register baseline missing: {marker}")
+
 if errors:
     print("QA FAILED")
     for e in errors:
