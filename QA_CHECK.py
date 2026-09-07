@@ -1,9 +1,11 @@
 from pathlib import Path
+from urllib.parse import urlparse
 import re, sys, subprocess, shutil, xml.etree.ElementTree as ET
 
 root = Path(__file__).resolve().parent
 errors = []
 prod = "https://soutak-plus.vercel.app/"
+retired_or_private = {"admin.html", "login.html", "account.html", "product.html", "products.html", "post.html", "404.html"}
 
 all_htmls = list(root.glob("*.html")) + list((root / "articles").glob("*.html"))
 verification_htmls = {p for p in all_htmls if re.fullmatch(r"google[a-zA-Z0-9_-]+\.html", p.name)}
@@ -23,12 +25,13 @@ for hp in htmls:
     txt = hp.read_text(encoding="utf-8")
     if "<title>" not in txt:
         errors.append(f"{hp}: missing title")
-    if 'name="description"' not in txt:
+    if hp.name not in retired_or_private and 'name="description"' not in txt:
         errors.append(f"{hp}: missing meta description")
+    if hp.name in retired_or_private and hp.name not in {"admin.html", "login.html"} and 'name="robots"' in txt and "noindex" not in txt:
+        errors.append(f"{hp}: retired/private page must remain noindex")
     if any(marker in txt for marker in ["YOUR-DOMAIN.example", "motshib-jpg.github.io/soutak-plus", "نسخة تجريبية", "وضع تجريبي"]):
         errors.append(f"{hp}: production placeholder/demo text found")
-    public_no_canonical = {"admin.html", "login.html", "account.html", "product.html", "products.html", "post.html", "404.html"}
-    if hp.name not in public_no_canonical and f'rel="canonical" href="{prod}' not in txt:
+    if hp.name not in retired_or_private and f'rel="canonical" href="{prod}' not in txt:
         errors.append(f"{hp}: missing production canonical")
     for ref in re.findall(r'(?:src|href)="([^"#?]+)', txt):
         if ref.startswith(("http:", "https:", "mailto:", "tel:", "javascript:", "/api/", "data:")):
@@ -71,11 +74,11 @@ try:
         errors.append(f"Expected 29 sitemap URLs, found {len(urls)}")
     if len(set(urls)) != len(urls):
         errors.append("Duplicate URLs found in sitemap")
-    forbidden_sitemap = ["account.html", "admin.html", "login.html", "product.html", "products.html", "post.html", "404.html"]
-    for bad in forbidden_sitemap:
-        if any(bad in u for u in urls):
+    sitemap_paths = {urlparse(u).path.lstrip("/") for u in urls}
+    for bad in retired_or_private:
+        if bad in sitemap_paths:
             errors.append(f"Retired/private URL present in sitemap: {bad}")
-    article_urls = [u for u in urls if "/articles/" in u]
+    article_urls = [u for u in urls if "/articles/" in urlparse(u).path]
     if len(article_urls) != 20:
         errors.append(f"Expected 20 article URLs in sitemap, found {len(article_urls)}")
 except Exception as exc:
