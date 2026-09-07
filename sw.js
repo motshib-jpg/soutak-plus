@@ -1,4 +1,4 @@
-const CACHE_VERSION = "soutakplus-v13-seo-polish";
+const CACHE_VERSION = "soutakplus-v14-survival-hardening";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const CORE = [
   "/",
@@ -15,11 +15,9 @@ const CORE = [
   "/assets/css/style.css",
   "/assets/css/polish.css",
   "/assets/js/config.js",
-  "/assets/js/supabase-client.js",
   "/assets/js/app.js",
-  "/assets/js/content.js",
+  "/assets/js/reader-tools.js",
   "/assets/js/forms.js",
-  "/assets/js/services.js",
   "/assets/js/ads.js",
   "/assets/images/icon.svg",
   "/manifest.webmanifest"

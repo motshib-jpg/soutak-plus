@@ -37,3 +37,6 @@ a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible,
 @media(max-width:950px){.value-strip,.reading-grid,.steps{grid-template-columns:1fr 1fr}.contact-intro{grid-template-columns:1fr}}
 @media(max-width:620px){.value-strip,.reading-grid,.steps{grid-template-columns:1fr}.editorial-box,.trust-box,.info-box{padding:20px}.article-wrap p{font-size:15px}.post-card h3,.service-card h3,.product-card h3{font-size:17px}.article-byline{align-items:flex-start;flex-wrap:wrap}.article-byline a{margin-right:50px}.mfa-qr{width:min(210px,76vw)}}
 
+
+/* content lab */
+.tool-grid{align-items:stretch}.tool-card{display:flex;flex-direction:column;gap:11px}.tool-card h3{margin:2px 0}.tool-card p{color:var(--muted);font-size:12px;line-height:1.8}.tool-card label{display:flex;gap:9px;align-items:flex-start;color:#c9d3e3;font-size:12px;line-height:1.7}.tool-card input:not([type="checkbox"]),.tool-card textarea{width:100%;border:1px solid var(--line);border-radius:12px;background:#080b12;color:#eef2ff;padding:12px;font:inherit}.tool-card input[type="checkbox"]{margin-top:4px}.tool-result,.tool-output{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025);padding:12px;color:#cbd5e1;font-size:12px;line-height:1.8;min-height:48px}.tool-output{min-height:150px;resize:vertical}.tool-card .btn{align-self:flex-start}

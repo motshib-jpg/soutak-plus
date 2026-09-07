@@ -4,7 +4,7 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=()
   X-Frame-Options: DENY
 
-Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://pagead2.googlesyndication.com https://securepubads.g.doubleclick.net; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://securepubads.g.doubleclick.net; font-src 'self' data:; frame-src https://*.doubleclick.net https://*.googlesyndication.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests
+Content-Security-Policy: default-src 'self'; script-src 'self' https://pagead2.googlesyndication.com https://securepubads.g.doubleclick.net; script-src-attr 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://pagead2.googlesyndication.com https://googleads.g.doubleclick.net https://securepubads.g.doubleclick.net; font-src 'self' data:; frame-src https://*.doubleclick.net https://*.googlesyndication.com; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; upgrade-insecure-requests
 Cross-Origin-Opener-Policy: same-origin
 X-Robots-Tag: all
 
