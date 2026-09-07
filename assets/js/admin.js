@@ -9,6 +9,8 @@
    status.textContent=text;
  };
 
+ // This self-only lookup is intentionally usable at AAL1 so a legitimate admin can enroll MFA.
+ // All privileged data and writes remain protected by soutak_is_admin(), which requires AAL2.
  const isAdminIdentity=async(session)=>{
    if(!session?.user?.id)return false;
    const {data,error}=await db.client
@@ -26,6 +28,13 @@
    return data;
  };
 
+ const confirmAdminAtAal2=async()=>{
+   const aal=await currentAal();
+   if(aal?.currentLevel!=="aal2")return false;
+   const {data,error}=await db.client.rpc("soutak_is_admin");
+   return !error&&data===true;
+ };
+
  async function verifyTotp(factorId,code){
    if(!/^\d{6}$/.test(code))throw new Error("invalid_code");
    const {data:challenge,error:challengeError}=await db.client.auth.mfa.challenge({factorId});
@@ -33,8 +42,7 @@
    const {error:verifyError}=await db.client.auth.mfa.verify({factorId,challengeId:challenge.id,code});
    if(verifyError)throw new Error("verify_failed");
    await db.client.auth.refreshSession();
-   const aal=await currentAal();
-   if(aal?.currentLevel!=="aal2")throw new Error("aal2_required");
+   if(!(await confirmAdminAtAal2()))throw new Error("admin_aal2_required");
  }
 
  function createMfaPanel(title,description){
@@ -66,7 +74,6 @@
  }
 
  async function renderMfaEnrollment(){
-   // Remove abandoned, unverified factors so a fresh QR can be issued.
    const {data:list}=await db.client.auth.mfa.listFactors();
    for(const f of (list?.totp||[]).filter(x=>x.status!=="verified")){
      try{await db.client.auth.mfa.unenroll({factorId:f.id})}catch(_){}
@@ -92,7 +99,10 @@
    if(!(await isAdminIdentity(session))){await db.client.auth.signOut();setStatus("تعذر تسجيل الدخول.");return}
    try{
      const aal=await currentAal();
-     if(aal?.currentLevel==="aal2"){location.replace("admin.html");return}
+     if(aal?.currentLevel==="aal2"){
+       if(await confirmAdminAtAal2()){location.replace("admin.html");return}
+       await db.client.auth.signOut();setStatus("تعذر تسجيل الدخول.");return;
+     }
      const {data:factors,error}=await db.client.auth.mfa.listFactors();
      if(error)throw error;
      const verified=(factors?.totp||[]).find(f=>f.status==="verified");
@@ -131,9 +141,8 @@
  if(!session){location.replace("login.html");return}
  if(!(await isAdminIdentity(session))){await db.client.auth.signOut();location.replace("login.html");return}
  try{
-   const aal=await currentAal();
-   if(aal?.currentLevel!=="aal2"){location.replace("login.html");return}
- }catch{location.replace("login.html");return}
+   if(!(await confirmAdminAtAal2())){await db.client.auth.signOut();location.replace("login.html");return}
+ }catch{await db.client.auth.signOut();location.replace("login.html");return}
  guard.remove();
 
  let idleTimer;
