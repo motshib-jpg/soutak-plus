@@ -62,12 +62,18 @@ jobs:
 
           need_fixed 'soutak_is_admin' assets/js/admin.js 'admin authorization check'
           need_fixed 'aal2' assets/js/admin.js 'AAL2 requirement'
-          need_fixed '.auth.mfa.' assets/js/admin.js 'MFA flow'
+          need_fixed '/factors/' assets/js/admin.js 'MFA challenge and verify flow'
+          need_fixed 'challenge_id' assets/js/admin.js 'MFA verification payload'
+          need_fixed '/token?grant_type=password' assets/js/admin.js 'direct password sign-in'
+          if grep -Eq 'cdn\.jsdelivr\.net|unpkg\.com|supabase-client\.js' login.html admin.html; then
+            echo 'Admin/login must not depend on third-party SDK CDNs' >&2; exit 1
+          fi
 
           need_fixed "script-src-attr 'none'" vercel.json 'inline event handlers blocked by CSP'
           need_fixed 'Strict-Transport-Security' vercel.json 'HSTS enabled'
           need_fixed 'X-Frame-Options' vercel.json 'clickjacking protection'
           need_fixed 'no-store' vercel.json 'sensitive routes not cached'
+          need_fixed "script-src 'self'" vercel.json 'same-origin script policy available for sensitive routes'
           need_fixed 'Disallow: /admin.html' robots.txt 'admin blocked from crawlers'
           need_fixed 'Disallow: /login.html' robots.txt 'login blocked from crawlers'
           need_fixed 'Disallow: /account.html' robots.txt 'account blocked from crawlers'
