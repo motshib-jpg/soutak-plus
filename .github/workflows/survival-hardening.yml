@@ -1,0 +1,139 @@
+name: One-time survival hardening
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/survival-hardening.yml']
+permissions:
+  contents: write
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Harden public runtime and add original tools
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          root=Path('.')
+          sdk_re=r'<script src="https://cdn\.jsdelivr\.net/npm/@supabase/supabase-js@2"></script>'
+          client_tags=[
+            '<script src="assets/js/supabase-client.js" defer></script>',
+            '<script src="../assets/js/supabase-client.js" defer></script>'
+          ]
+          config_tags=[
+            '<script src="assets/js/config.js"></script>',
+            '<script src="../assets/js/config.js"></script>'
+          ]
+
+          # Article reading must be static and independent of Supabase/CDNs.
+          for p in (root/'articles').glob('*.html'):
+            s=p.read_text('utf-8')
+            s=re.sub(sdk_re,'',s)
+            for tag in client_tags+config_tags:
+              s=s.replace(tag,'')
+            p.write_text(s,'utf-8')
+
+          # Public root pages: keep config only where forms need the Edge Function URL.
+          for p in root.glob('*.html'):
+            if p.name in {'admin.html','login.html'} or p.name.startswith('google'):
+              continue
+            s=p.read_text('utf-8')
+            s=re.sub(sdk_re,'',s)
+            for tag in client_tags:
+              s=s.replace(tag,'')
+            if 'assets/js/forms.js' not in s:
+              for tag in config_tags:
+                s=s.replace(tag,'')
+            if p.name=='content.html':
+              s=s.replace('<script src="assets/js/content.js" defer></script>','')
+            if p.name=='services.html':
+              s=s.replace('<script src="assets/js/services.js" defer></script>','')
+              s=s.replace('يتم تحديث هذه الخدمات من قاعدة بيانات صوتك+ عند توفر الاتصال، وتبقى النسخة الأساسية أدناه ظاهرة دائمًا.','هذه هي الخدمات المنشورة حاليًا، وتبقى تفاصيلها ظاهرة مباشرة دون الاعتماد على قاعدة بيانات لعرض الصفحة.')
+            p.write_text(s,'utf-8')
+
+          # Add a first-party practical lab to the existing content hub (no extra indexable URL).
+          content=root/'content.html'
+          s=content.read_text('utf-8')
+          marker='id="contentLab"'
+          if marker not in s:
+            lab='''\n<section class="section soft" id="contentLab"><div class="container"><div class="section-head"><span>مختبر صوتك+</span><h2>3 أدوات عملية تعمل داخل المتصفح</h2><p>لا تُرسل إجاباتك إلى الخادم ولا تحتاج إلى تسجيل دخول. استخدمها لاتخاذ قرار أسرع قبل الكتابة أو النشر.</p></div><div class="grid3 tool-grid">\n<article class="panel tool-card"><span class="tag">وضوح المجال</span><h3>اختبار وضوح فكرة المحتوى</h3><p>حدد ما ينطبق على فكرتك، ثم احصل على درجة فورية.</p><label><input type="checkbox" data-clarity> أعرف الجمهور المحدد الذي أخاطبه</label><label><input type="checkbox" data-clarity> أستطيع وصف الفائدة في جملة واحدة</label><label><input type="checkbox" data-clarity> لدي 10 أسئلة حقيقية يمكن أن أجيب عنها</label><label><input type="checkbox" data-clarity> أستطيع الاستمرار في المجال 3 أشهر على الأقل</label><label><input type="checkbox" data-clarity> لدي إضافة أو زاوية لا تكرر الموجود حرفيًا</label><button class="btn primary small" type="button" id="clarityCalc">احسب الدرجة</button><div class="tool-result" id="clarityResult" role="status" aria-live="polite">لم تُحسب بعد.</div></article>\n<article class="panel tool-card"><span class="tag">العنوان</span><h3>فاحص عنوان المحتوى</h3><p>اكتب عنوانًا، وسنراجع الوضوح والطول والوعد بدل الاعتماد على الإحساس فقط.</p><input id="headlineInput" maxlength="120" placeholder="مثال: كيف تختار مجال محتوى واضحًا؟"><button class="btn primary small" type="button" id="headlineCheck">افحص العنوان</button><div class="tool-result" id="headlineResult" role="status" aria-live="polite">اكتب عنوانًا للبدء.</div></article>\n<article class="panel tool-card"><span class="tag">موجز المحتوى</span><h3>مولّد موجز قبل الكتابة</h3><p>حوّل الفكرة إلى موجز صغير يحدد الجمهور والمشكلة والنتيجة والدليل المطلوب.</p><input id="briefAudience" placeholder="الجمهور"><input id="briefProblem" placeholder="المشكلة أو السؤال"><input id="briefOutcome" placeholder="النتيجة التي سيحصل عليها القارئ"><textarea id="briefEvidence" placeholder="مثال، مصدر، تجربة، لقطة شاشة أو دليل ستضيفه"></textarea><button class="btn primary small" type="button" id="briefBuild">أنشئ الموجز</button><textarea class="tool-output" id="briefOutput" readonly aria-label="الموجز الناتج"></textarea><button class="btn ghost small" type="button" id="briefCopy">نسخ الموجز</button></article>\n</div><p class="fallback-note">هذه الأدوات محلية بالكامل: لا تحفظ المدخلات ولا ترسلها إلى Supabase أو أي خدمة خارجية.</p></div></section>\n'''
+            s=s.replace('</main>',lab+'</main>')
+          if 'assets/js/reader-tools.js' not in s:
+            s=s.replace('<script src="assets/js/pwa.js" defer></script>','<script src="assets/js/reader-tools.js" defer></script><script src="assets/js/pwa.js" defer></script>')
+          content.write_text(s,'utf-8')
+
+          tools=r'''(()=>{
+            const qs=(s)=>document.querySelector(s);
+            qs('#clarityCalc')?.addEventListener('click',()=>{
+              const checks=[...document.querySelectorAll('[data-clarity]')];
+              const score=checks.filter(x=>x.checked).length*20;
+              const text=score>=80?'ممتاز: الفكرة واضحة بما يكفي للانتقال إلى خطة تنفيذ.':score>=60?'جيد: وضّح النقاط غير المحددة قبل توسيع الإنتاج.':score>=40?'متوسط: ما زال المجال واسعًا أو الوعد غير واضح.':'ضعيف: لا تبدأ بالإنتاج الكبير قبل تحديد الجمهور والمشكلة والفائدة.';
+              qs('#clarityResult').textContent=`${score}/100 — ${text}`;
+            });
+            qs('#headlineCheck')?.addEventListener('click',()=>{
+              const v=(qs('#headlineInput')?.value||'').trim();
+              if(!v){qs('#headlineResult').textContent='اكتب عنوانًا أولًا.';return}
+              let score=0, notes=[];
+              if(v.length>=28&&v.length<=72)score+=35;else notes.push('اجعل الطول أوضح؛ غالبًا 28–72 حرفًا مناسب كنقطة بداية.');
+              if(/[؟?]/.test(v)||/كيف|لماذا|دليل|خطوات|قالب|طريقة|مقارنة/.test(v))score+=25;else notes.push('أظهر نوع الفائدة أو السؤال بوضوح.');
+              if(/محتوى|يوتيوب|جمهور|SEO|عنوان|فيديو|خدمة|بورتفوليو|مقال/.test(v))score+=20;else notes.push('أضف كلمة تصف الموضوع بوضوح.');
+              if(!/مذهل|خرافي|لن تصدق|سر خطير|صدمة/.test(v))score+=20;else notes.push('تجنب المبالغة التي لا يمكن الوفاء بها.');
+              qs('#headlineResult').textContent=`${score}/100 — ${notes.length?notes.join(' '):'عنوان واضح ومحدد دون مبالغة ظاهرة.'}`;
+            });
+            qs('#briefBuild')?.addEventListener('click',()=>{
+              const a=(qs('#briefAudience')?.value||'غير محدد').trim();
+              const p=(qs('#briefProblem')?.value||'غير محددة').trim();
+              const o=(qs('#briefOutcome')?.value||'غير محددة').trim();
+              const e=(qs('#briefEvidence')?.value||'يجب إضافة مثال أو مصدر أو دليل أصلي قبل النشر').trim();
+              qs('#briefOutput').value=`الجمهور: ${a}\nالمشكلة/السؤال: ${p}\nالنتيجة الموعودة: ${o}\nالدليل أو الإضافة الأصلية: ${e}\n\nشرط النشر: يجب أن يفي العنوان والمقدمة بالنتيجة الموعودة، وأن يحتوي المحتوى على مثال أو دليل يمكن للقارئ استخدامه أو التحقق منه.`;
+            });
+            qs('#briefCopy')?.addEventListener('click',async()=>{
+              const out=qs('#briefOutput'); if(!out?.value)return;
+              try{await navigator.clipboard.writeText(out.value);qs('#briefCopy').textContent='تم النسخ ✓';setTimeout(()=>qs('#briefCopy').textContent='نسخ الموجز',1600)}catch(_){out.select();document.execCommand('copy')}
+            });
+          })();'''
+          (root/'assets/js/reader-tools.js').write_text(tools,'utf-8')
+
+          css=root/'assets/css/polish.css'
+          c=css.read_text('utf-8')
+          css_marker='/* content lab */'
+          if css_marker not in c:
+            c+='''\n/* content lab */\n.tool-grid{align-items:stretch}.tool-card{display:flex;flex-direction:column;gap:11px}.tool-card h3{margin:2px 0}.tool-card p{color:var(--muted);font-size:12px;line-height:1.8}.tool-card label{display:flex;gap:9px;align-items:flex-start;color:#c9d3e3;font-size:12px;line-height:1.7}.tool-card input:not([type="checkbox"]),.tool-card textarea{width:100%;border:1px solid var(--line);border-radius:12px;background:#080b12;color:#eef2ff;padding:12px;font:inherit}.tool-card input[type="checkbox"]{margin-top:4px}.tool-result,.tool-output{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025);padding:12px;color:#cbd5e1;font-size:12px;line-height:1.8;min-height:48px}.tool-output{min-height:150px;resize:vertical}.tool-card .btn{align-self:flex-start}\n'''
+          css.write_text(c,'utf-8')
+
+          # Service worker: cache only live public runtime assets; bump version to purge old SDK caches.
+          sw=root/'sw.js'
+          w=sw.read_text('utf-8')
+          w=re.sub(r'const CACHE_VERSION = "[^"]+";', 'const CACHE_VERSION = "soutakplus-v14-survival-hardening";', w)
+          for old in ['  "/assets/js/supabase-client.js",\n','  "/assets/js/content.js",\n','  "/assets/js/services.js",\n']:
+            w=w.replace(old,'')
+          if '"/assets/js/reader-tools.js"' not in w:
+            w=w.replace('  "/assets/js/app.js",\n','  "/assets/js/app.js",\n  "/assets/js/reader-tools.js",\n')
+          sw.write_text(w,'utf-8')
+
+          # Tighten CSP now that public pages do not use jsDelivr.
+          for fname in ['vercel.json','_headers']:
+            p=root/fname
+            t=p.read_text('utf-8').replace(' https://cdn.jsdelivr.net','')
+            p.write_text(t,'utf-8')
+
+          # Remove dead dynamic-read clients from production main.
+          for dead in ['assets/js/supabase-client.js','assets/js/content.js','assets/js/services.js']:
+            p=root/dead
+            if p.exists(): p.unlink()
+
+          # One-time workflow removes itself before validation/commit.
+          Path('.github/workflows/survival-hardening.yml').unlink(missing_ok=True)
+          PY
+
+      - name: Commit hardening
+        shell: bash
+        run: |
+          git config user.name "soutak-plus-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Harden survival risks and add first-party content lab"
+          git push origin HEAD:main
