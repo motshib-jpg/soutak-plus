@@ -28,12 +28,13 @@ jobs:
             if [ ! -f "$f" ]; then echo "Missing required file: $f" >&2; exit 1; fi
           done
 
-          # Core hosting/security headers must remain present.
+          # Core hosting/security headers and release gate must remain present.
           grep -Fq "script-src-attr 'none'" vercel.json || { echo 'CSP inline handler protection missing' >&2; exit 1; }
           grep -Fq 'Strict-Transport-Security' vercel.json || { echo 'HSTS missing' >&2; exit 1; }
           grep -Fq 'X-Frame-Options' vercel.json || { echo 'Clickjacking protection missing' >&2; exit 1; }
           grep -Fq 'no-store' vercel.json || { echo 'Sensitive-route no-store policy missing' >&2; exit 1; }
           grep -Fq "script-src 'self'" vercel.json || { echo 'Same-origin script policy missing' >&2; exit 1; }
+          grep -Fq '"main": false' vercel.json || { echo 'Automatic main production deployment must remain disabled' >&2; exit 1; }
 
           # Public submission remains server-side and admin remains MFA/AAL2 protected.
           grep -Fq 'functions/v1/soutak-public-submit' assets/js/forms.js || { echo 'Hardened form submission route missing' >&2; exit 1; }
