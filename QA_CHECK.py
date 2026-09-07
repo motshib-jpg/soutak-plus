@@ -197,6 +197,20 @@ for article in article_pages:
     if f'articles/{article.name}' not in content_html:
         errors.append(f"{article.name}: missing link from content.html")
 
+# Every article also needs a contextual inbound link outside the hub itself.
+context_sources = [root / "index.html", root / "editorial.html", *article_pages]
+for article in article_pages:
+    needles = [f'href="{article.name}"', f'href="articles/{article.name}"', f'href="../articles/{article.name}"']
+    inbound = 0
+    for source in context_sources:
+        if source == article:
+            continue
+        text = source.read_text(encoding="utf-8")
+        if any(n in text for n in needles):
+            inbound += 1
+    if inbound < 1:
+        errors.append(f"{article.name}: no contextual inbound link outside content.html")
+
 pillars = ["seo-for-arabic-content-beginners.html","youtube-channel-without-showing-face.html","youtube-video-script-template.html","content-ideas-system.html","how-to-choose-content-niche.html"]
 for name in pillars:
     txt = (root / "articles" / name).read_text(encoding="utf-8")
