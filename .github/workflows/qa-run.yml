@@ -1,0 +1,26 @@
+name: Final production QA
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/qa-run.yml']
+permissions:
+  contents: write
+jobs:
+  qa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run production QA
+        shell: bash
+        run: |
+          rm -f .github/workflows/qa-run.yml
+          python3 QA_CHECK.py
+      - name: Clean bootstrap workflow
+        if: success()
+        shell: bash
+        run: |
+          git config user.name "soutak-plus-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Record clean final production QA" || true
+          git push origin HEAD:main
