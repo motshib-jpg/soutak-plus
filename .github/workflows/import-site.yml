@@ -23,8 +23,8 @@ jobs:
 
           for f in \
             index.html content.html vercel.json robots.txt sitemap.xml ads.txt QA_CHECK.py \
-            admin.html login.html assets/js/admin.js assets/js/forms.js \
-            supabase/functions/soutak-public-submit/index.ts; do
+            admin.html login.html privacy.html assets/js/admin.js assets/js/forms.js assets/js/app.js assets/js/reader-tools.js \
+            supabase/functions/soutak-public-submit/index.ts supabase/functions/soutak-analytics/index.ts; do
             if [ ! -f "$f" ]; then echo "Missing required file: $f" >&2; exit 1; fi
           done
 
@@ -45,6 +45,18 @@ jobs:
           done
           if grep -Eq 'cdn\.jsdelivr\.net|unpkg\.com|supabase-client\.js' login.html admin.html; then
             echo 'Admin/login must not depend on third-party SDK CDNs' >&2; exit 1
+          fi
+
+          # First-party analytics must remain minimal, source-restricted and reproducible.
+          grep -Fq 'functions/v1/soutak-analytics' assets/js/app.js || { echo 'Operational analytics endpoint missing from app.js' >&2; exit 1; }
+          grep -Fq 'navigator.globalPrivacyControl' assets/js/app.js || { echo 'GPC opt-out handling missing' >&2; exit 1; }
+          grep -Fq 'navigator.doNotTrack' assets/js/app.js || { echo 'DNT opt-out handling missing' >&2; exit 1; }
+          grep -Fq 'session_id: null' supabase/functions/soutak-analytics/index.ts || { echo 'Analytics must not store session IDs' >&2; exit 1; }
+          grep -Fq 'forbidden_origin' supabase/functions/soutak-analytics/index.ts || { echo 'Analytics origin restriction missing' >&2; exit 1; }
+          grep -Fq 'Privacy-minimal first-party operational analytics' assets/js/app.js || { echo 'Analytics privacy invariant comment missing' >&2; exit 1; }
+          grep -Fq 'لا يستخدم هذا القياس Cookie أو localStorage أو معرف مستخدم أو معرف جلسة' privacy.html || { echo 'Privacy policy does not document minimal analytics' >&2; exit 1; }
+          if grep -Eq 'headlineInput.*(fetch|send)|briefAudience.*(fetch|send)|briefProblem.*(fetch|send)|briefOutcome.*(fetch|send)|briefEvidence.*(fetch|send)' assets/js/reader-tools.js; then
+            echo 'Content-lab input appears coupled to network transmission' >&2; exit 1
           fi
 
           # No production secrets or stale demo placeholders may be committed.
