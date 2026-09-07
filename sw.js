@@ -1,4 +1,4 @@
-const CACHE_VERSION = "soutakplus-v9-security";
+const CACHE_VERSION = "soutakplus-v10-security";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const CORE = [
   "/",
@@ -42,18 +42,14 @@ function isNeverCache(url) {
 }
 
 self.addEventListener("install", event => {
-  event.waitUntil(
-    caches.open(STATIC_CACHE).then(cache => cache.addAll(CORE))
-  );
+  event.waitUntil(caches.open(STATIC_CACHE).then(cache => cache.addAll(CORE)));
   self.skipWaiting();
 });
 
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys => Promise.all(
-      keys
-        .filter(key => key.startsWith("soutakplus-") && key !== STATIC_CACHE)
-        .map(key => caches.delete(key))
+      keys.filter(key => key.startsWith("soutakplus-") && key !== STATIC_CACHE).map(key => caches.delete(key))
     ))
   );
   self.clients.claim();
@@ -64,7 +60,6 @@ self.addEventListener("fetch", event => {
   if (req.method !== "GET") return;
   const url = new URL(req.url);
 
-  // Never cache authenticated, protected, API, Supabase, or third-party requests.
   if (isNeverCache(url) || url.hostname.endsWith("supabase.co")) {
     event.respondWith(fetch(req, { cache: "no-store" }));
     return;
