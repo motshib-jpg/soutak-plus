@@ -22,7 +22,6 @@
   const links = [
     ["home",`${root}index.html`,"الرئيسية"],
     ["content",`${root}content.html`,"المحتوى"],
-    ["products",`${root}products.html`,"المواد الرقمية"],
     ["services",`${root}services.html`,"الخدمات"],
     ["sponsors",`${root}sponsors.html`,"التعاون"],
     ["about",`${root}about.html`,"عن صوتك+"]
@@ -38,8 +37,8 @@
   const footer = document.getElementById("siteFooter");
   if (footer) footer.innerHTML = `<footer class="site-footer"><div class="container footer">
     <div><a class="brand" href="${root}index.html"><span class="mark">+</span><span>صوتك+</span></a><p>محتوى عربي عملي يساعد صانع المحتوى على بناء حضور رقمي أكثر وضوحًا واستقلالًا.</p></div>
-    <div><h4>استكشف</h4><a href="${root}content.html">المقالات والأدلة</a><a href="${root}products.html">المواد الرقمية</a><a href="${root}services.html">الخدمات</a></div>
-    <div><h4>عن الموقع</h4><a href="${root}about.html">عن صوتك+</a><a href="${root}editorial.html">السياسة التحريرية</a><a href="${root}sponsors.html">التعاون والرعاية</a><a href="${root}contact.html">تواصل معنا</a></div>
+    <div><h4>استكشف</h4><a href="${root}content.html">المقالات والأدلة</a><a href="${root}services.html">الخدمات</a><a href="${root}sponsors.html">التعاون والرعاية</a></div>
+    <div><h4>عن الموقع</h4><a href="${root}about.html">عن صوتك+</a><a href="${root}editorial.html">السياسة التحريرية</a><a href="${root}contact.html">تواصل معنا</a></div>
     <div><h4>الخصوصية والشفافية</h4><a href="${root}privacy.html">سياسة الخصوصية</a><a href="${root}terms.html">الشروط والأحكام</a><a href="${root}editorial.html#ads">الإعلانات والشفافية</a></div>
   </div><div class="container copyright"><span>© ${new Date().getFullYear()} صوتك+ — جميع الحقوق محفوظة.</span><span>لا نقدم وعودًا مضمونة بالشهرة أو الدخل أو النتائج التجارية.</span></div></footer>`;
 
@@ -71,7 +70,6 @@
     });
   }
 
-  // Privacy notices belong only to public submission forms and are not duplicated when the page already explains them.
   if (!["admin","login","account","product"].includes(page)) {
     document.querySelectorAll('form[id$="Form"]').forEach(form=>{
       const card=form.closest('.form-card,.newsletter') || form.parentElement;
