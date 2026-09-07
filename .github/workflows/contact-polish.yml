@@ -1,0 +1,29 @@
+name: One-time contact polish
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/contact-polish.yml']
+permissions:
+  contents: write
+jobs:
+  polish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('contact.html')
+          html=p.read_text(encoding='utf-8')
+          section='''<section class="section"><div class="container two"><div><span class="eyebrow">قبل الإرسال</span><h2>تفاصيل بسيطة تجعل الرد أدق</h2><p class="muted">إذا كانت رسالتك عن صفحة محددة، أرفق رابطها واكتب ما الذي ظهر لك وما الذي كنت تتوقعه. وإذا كانت عن معلومة منشورة، اذكر المصدر أو التاريخ الذي يستحق المراجعة. هذا يساعد فريق التحرير على فهم الملاحظة بسرعة بدل التخمين.</p></div><div class="panel"><div class="mini-kpi"><span>لا نطلب</span><b>كلمات مرور أو بيانات بطاقات</b></div><div class="mini-kpi"><span>التصحيحات</span><b>تُراجع وفق السياسة التحريرية</b></div><div class="mini-kpi"><span>البيانات</span><b>تُستخدم لمعالجة الرسالة فقط</b></div></div></div></section>'''
+          if section not in html:
+              html=html.replace('</main>',section+'</main>',1)
+          p.write_text(html,encoding='utf-8')
+          Path('.github/workflows/contact-polish.yml').unlink(missing_ok=True)
+          PY
+          git config user.name "soutak-plus-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "Complete contact page content depth" || true
+          git push origin HEAD:main
