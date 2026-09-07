@@ -59,8 +59,13 @@ if "functions/v1/soutak-reward" not in gate:
     errors.append("reward-gate.js must use the server-side reward function")
 if "functions/v1/soutak-public-submit" not in forms:
     errors.append("Public forms must use the hardened submission Edge Function")
-if "soutak_is_admin" not in admin or "aal2" not in admin or ".auth.mfa." not in admin:
-    errors.append("Admin flow must require authorization and MFA/AAL2")
+admin_markers = ["soutak_is_admin", "aal2", "/factors/", "challenge_id", "/token?grant_type=password"]
+if any(marker not in admin for marker in admin_markers):
+    errors.append("Admin flow must require direct password auth, MFA challenge/verify, and AAL2 authorization")
+login_html = (root / "login.html").read_text(encoding="utf-8")
+admin_html = (root / "admin.html").read_text(encoding="utf-8")
+if any(x in login_html + admin_html for x in ["cdn.jsdelivr.net", "unpkg.com", "supabase-client.js"]):
+    errors.append("Admin/login must not depend on external Supabase SDK CDNs")
 if "مساحة إعلانية تجريبية" in display_ads or "مزود الإعلانات غير مهيأ" in display_ads:
     errors.append("Display ad code must not render demo or configuration placeholders")
 
@@ -82,4 +87,4 @@ if errors:
     for e in errors:
         print("-", e)
     sys.exit(1)
-print(f"QA PASSED: {len(htmls)} HTML pages checked; verification artifacts preserved; server-side reward entitlement + 5/5/10 verified.")
+print(f"QA PASSED: {len(htmls)} HTML pages checked; verification artifacts preserved; direct REST admin MFA + server-side reward entitlement + 5/5/10 verified.")
