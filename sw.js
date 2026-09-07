@@ -1,4 +1,4 @@
-const CACHE_VERSION = "soutakplus-v10-security";
+const CACHE_VERSION = "soutakplus-v11-security";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const CORE = [
   "/",
