@@ -1,10 +1,9 @@
-const CACHE_VERSION = "soutakplus-v11-security";
+const CACHE_VERSION = "soutakplus-v12-adsense-ready";
 const STATIC_CACHE = `${CACHE_VERSION}-static`;
 const CORE = [
   "/",
   "/index.html",
   "/content.html",
-  "/products.html",
   "/services.html",
   "/sponsors.html",
   "/about.html",
@@ -19,7 +18,6 @@ const CORE = [
   "/assets/js/supabase-client.js",
   "/assets/js/app.js",
   "/assets/js/content.js",
-  "/assets/js/store.js",
   "/assets/js/forms.js",
   "/assets/js/services.js",
   "/assets/js/ads.js",
@@ -32,6 +30,7 @@ const NEVER_CACHE_PATHS = [
   "/login.html",
   "/account.html",
   "/product.html",
+  "/products.html",
   "/post.html"
 ];
 
