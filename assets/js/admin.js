@@ -139,16 +139,16 @@
    const raw=String(rawValue||"").trim();
    if(!raw)return null;
    if(/^data:image\//i.test(raw)||/^blob:/i.test(raw))return {src:raw,revoke:null};
-   try{
-     const url=new URL(raw,SUPABASE_URL||location.origin);
-     if(/^https:$/.test(url.protocol)&&url.origin===new URL(SUPABASE_URL).origin)return {src:url.href,revoke:null};
-   }catch{}
-   // Supabase TOTP enrollment commonly returns raw SVG XML. An <img> cannot
-   // render XML assigned directly as its src, so keep it in an image-only Blob.
+   // Detect SVG before URL parsing: `new URL("<svg …>", base)` treats raw XML
+   // as a relative path, which produces a blank image instead of the QR code.
    if(/<svg[\s>]/i.test(raw)){
      const src=URL.createObjectURL(new Blob([raw],{type:"image/svg+xml"}));
      return {src,revoke:()=>URL.revokeObjectURL(src)};
    }
+   try{
+     const url=new URL(raw,SUPABASE_URL||location.origin);
+     if(/^https:$/.test(url.protocol)&&url.origin===new URL(SUPABASE_URL).origin)return {src:url.href,revoke:null};
+   }catch{}
    return null;
  }
  function addManualTotpFallback(panel,totp,open=false){
