@@ -43,7 +43,6 @@
     <div><h4>الخصوصية والشفافية</h4><a href="${root}privacy.html">سياسة الخصوصية</a><a href="${root}terms.html">الشروط والأحكام</a><a href="${root}editorial.html#ads">الإعلانات والشفافية</a></div>
   </div><div class="container copyright"><span>© ${new Date().getFullYear()} صوتك+ — جميع الحقوق محفوظة.</span><span>لا نقدم وعودًا مضمونة بالشهرة أو الدخل أو النتائج التجارية.</span></div></footer>`;
 
-  // Preserve old bookmarks while making every visible article link point to its canonical static page.
   document.querySelectorAll('a[href*="post.html?slug="]').forEach(a=>{
     try {
       const u=new URL(a.getAttribute("href"), location.href);
@@ -52,7 +51,6 @@
     } catch(_) {}
   });
 
-  // Add a consistent trust signal to static article pages without requiring duplicated markup.
   if (location.pathname.startsWith("/articles/")) {
     const article = document.querySelector("article.article-wrap");
     const meta = article?.querySelector(".article-meta-row");
@@ -73,16 +71,19 @@
     });
   }
 
-  // Make privacy expectations visible next to every public submission form.
-  document.querySelectorAll('form[id$="Form"]').forEach(form=>{
-    const card=form.closest('.form-card,.newsletter') || form.parentElement;
-    if(card && !card.querySelector('.form-privacy')){
-      const note=document.createElement('p');
-      note.className='form-privacy';
-      note.innerHTML=`بإرسال هذا النموذج، ستتم معالجة البيانات للغرض الموضح فقط وفق <a href="${root}privacy.html">سياسة الخصوصية</a>.`;
-      form.insertAdjacentElement('afterend',note);
-    }
-  });
+  // Privacy notices belong only to public submission forms and are not duplicated when the page already explains them.
+  if (!["admin","login","account","product"].includes(page)) {
+    document.querySelectorAll('form[id$="Form"]').forEach(form=>{
+      const card=form.closest('.form-card,.newsletter') || form.parentElement;
+      const alreadyExplained = card?.querySelector('.form-privacy, .fallback-note a[href*="privacy"]');
+      if(card && !alreadyExplained){
+        const note=document.createElement('p');
+        note.className='form-privacy';
+        note.innerHTML=`بإرسال هذا النموذج، ستتم معالجة البيانات للغرض الموضح فقط وفق <a href="${root}privacy.html">سياسة الخصوصية</a>.`;
+        form.insertAdjacentElement('afterend',note);
+      }
+    });
+  }
   document.querySelectorAll('.form-status').forEach(el=>{
     el.setAttribute('role','status');
     el.setAttribute('aria-live','polite');
@@ -111,10 +112,4 @@
 
   const obs = "IntersectionObserver" in window ? new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("show");obs.unobserve(e.target)}}),{threshold:.1}) : null;
   document.querySelectorAll(".reveal").forEach(el=>obs?obs.observe(el):el.classList.add("show"));
-
-  if (window.SOUTAK_CONFIG?.analyticsEnabled && window.SoutakDB?.enabled && navigator.doNotTrack !== "1") {
-    const key="soutak_session"; let sid=localStorage.getItem(key);
-    if(!sid){sid=crypto.randomUUID?.() || String(Date.now());localStorage.setItem(key,sid)}
-    window.SoutakDB.client.rpc("soutak_track_event_public",{p_event_name:"page_view",p_path:location.pathname,p_referrer:document.referrer||null,p_session_id:sid,p_metadata:{page}}).then(()=>{}).catch(()=>{});
-  }
 })();
