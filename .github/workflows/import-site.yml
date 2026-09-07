@@ -38,7 +38,6 @@ jobs:
             need_file "$f"
           done
 
-          # Protected resources and obsolete bootstrap code must not ship publicly.
           for f in \
             downloads/creator-starter-guide.md \
             downloads/content-templates.md \
@@ -47,7 +46,6 @@ jobs:
             if [ -f "$f" ]; then echo "Forbidden production file present: $f" >&2; exit 1; fi
           done
 
-          # Reward policy and server-bound entitlement.
           need_regex '"creator-starter-guide"[[:space:]]*:[[:space:]]*5' assets/js/store.js 'creator guide requires 5 rewards'
           need_regex '"content-templates"[[:space:]]*:[[:space:]]*5' assets/js/store.js 'templates require 5 rewards'
           need_regex '"first-audience"[[:space:]]*:[[:space:]]*10' assets/js/store.js 'first audience requires 10 rewards'
@@ -57,18 +55,15 @@ jobs:
             echo 'Client-side entitlement detected in reward-gate.js' >&2; exit 1
           fi
 
-          # Public writes must use the hardened server endpoint only.
           need_fixed 'functions/v1/soutak-public-submit' assets/js/forms.js 'forms use hardened submission Edge Function'
           if grep -Eq 'soutak_submit_(sponsor|service|contact)_.*public|soutak_subscribe_public' assets/js/forms.js; then
             echo 'Legacy direct public write RPC detected in forms.js' >&2; exit 1
           fi
 
-          # Admin must use authorization + MFA/AAL2.
           need_fixed 'soutak_is_admin' assets/js/admin.js 'admin authorization check'
           need_fixed 'aal2' assets/js/admin.js 'AAL2 requirement'
           need_fixed '.auth.mfa.' assets/js/admin.js 'MFA flow'
 
-          # Browser and crawler hardening.
           need_fixed "script-src-attr 'none'" vercel.json 'inline event handlers blocked by CSP'
           need_fixed 'Strict-Transport-Security' vercel.json 'HSTS enabled'
           need_fixed 'X-Frame-Options' vercel.json 'clickjacking protection'
@@ -80,17 +75,31 @@ jobs:
           need_fixed 'https://soutak-plus.vercel.app/sitemap.xml' robots.txt 'production sitemap declared'
           need_fixed 'https://soutak-plus.vercel.app/' sitemap.xml 'production URLs in sitemap'
 
-          # Never commit actual server-secret material. Environment variable names are allowed.
-          if grep -R -n -E 'sb_secret_[A-Za-z0-9_-]{12,}' --exclude-dir=.git .; then
-            echo 'Potential Supabase secret key committed.' >&2; exit 1
-          fi
-          if grep -R -n -E '(SERVICE_ROLE_KEY|service_role_key)[[:space:]]*[:=][[:space:]]*["'"'][A-Za-z0-9._-]{20,}["'"']' --exclude-dir=.git .; then
-            echo 'Potential hard-coded service-role credential committed.' >&2; exit 1
-          fi
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, sys
 
-          if grep -R -n -E 'YOUR-DOMAIN\.example|motshib-jpg\.github\.io/soutak-plus|وضع تجريبي|نسخة تجريبية' \
-            --include='*.html' --include='*.js' --include='robots.txt' --include='sitemap.xml' .; then
-            echo 'Production placeholder or demo text found.' >&2; exit 1
-          fi
+          skip = {'.git'}
+          secret_patterns = [
+              re.compile(r'sb_secret_[A-Za-z0-9_-]{12,}'),
+              re.compile(r'(?:SERVICE_ROLE_KEY|service_role_key)\s*[:=]\s*[\"\'][A-Za-z0-9._-]{20,}[\"\']'),
+          ]
+          placeholder = re.compile(r'YOUR-DOMAIN\.example|motshib-jpg\.github\.io/soutak-plus|وضع تجريبي|نسخة تجريبية')
+          text_suffixes = {'.html','.js','.ts','.json','.md','.txt','.xml','.yml','.yaml','.py','.sql'}
+          for p in Path('.').rglob('*'):
+              if not p.is_file() or any(part in skip for part in p.parts) or p.suffix.lower() not in text_suffixes:
+                  continue
+              try:
+                  s=p.read_text('utf-8')
+              except Exception:
+                  continue
+              for pattern in secret_patterns:
+                  if pattern.search(s):
+                      print(f'Potential server secret committed in {p}', file=sys.stderr)
+                      sys.exit(1)
+              if p.suffix.lower() in {'.html','.js','.txt','.xml'} and placeholder.search(s):
+                  print(f'Production placeholder/demo text found in {p}', file=sys.stderr)
+                  sys.exit(1)
+          PY
 
           python3 QA_CHECK.py
