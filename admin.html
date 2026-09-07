@@ -1,11 +1,10 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2236396092729732" crossorigin="anonymous"></script>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#070a12">
-<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="assets/images/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/css/style.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/config.js"></script><script src="assets/js/supabase-client.js" defer></script><script src="assets/js/app.js" defer></script>
-<title>لوحة الإدارة | صوتك+</title><meta name="description" content="لوحة إدارة صوتك+."><meta name="robots" content="noindex,nofollow,noarchive">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#070a12"><meta name="referrer" content="no-referrer">
+<link rel="icon" href="assets/images/icon.svg" type="image/svg+xml"><link rel="stylesheet" href="assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.115.0"></script><script src="assets/js/config.js"></script><script src="assets/js/supabase-client.js" defer></script><script src="assets/js/app.js" defer></script>
+<title>لوحة الإدارة | صوتك+</title><meta name="description" content="لوحة إدارة صوتك+."><meta name="robots" content="noindex,nofollow,noarchive,nosnippet,noimageindex">
 </head>
 <body data-page="admin">
 <div class="ambient a1"></div><div class="ambient a2"></div><div id="siteHeader"></div>
@@ -15,9 +14,9 @@
   <div id="adminGuard" class="mode-banner">جارٍ التحقق من صلاحية الإدارة...</div>
   <section class="admin-tab active" id="tab-overview"><h1>لوحة التحكم</h1><div id="adminKpis" class="grid4"></div></section>
   <section class="admin-tab" id="tab-products"><h2>المواد المجانية</h2><div class="mode-banner">سياسة المكافأة ثابتة: دليل البداية 5، قوالب صناعة المحتوى 5، ومن الفكرة إلى أول جمهور 10. لا يمكن تغييرها من لوحة الإدارة.</div><div id="adminProductsList" class="admin-list"></div></section>
-  <section class="admin-tab" id="tab-posts"><h2>إضافة محتوى</h2><form id="adminPostForm" class="form-grid form-card"><input name="title" required placeholder="العنوان"><input name="slug" required pattern="[a-z0-9-]+" placeholder="slug-example"><textarea name="excerpt" required placeholder="ملخص"></textarea><textarea name="body" required placeholder="المحتوى النصي"></textarea><button class="btn primary" type="submit">نشر</button></form><div id="adminPostsList" class="admin-list"></div></section>
+  <section class="admin-tab" id="tab-posts"><h2>إضافة محتوى</h2><form id="adminPostForm" class="form-grid form-card" autocomplete="off"><input name="title" required maxlength="180" placeholder="العنوان"><input name="slug" required pattern="[a-z0-9-]+" maxlength="100" placeholder="slug-example"><textarea name="excerpt" required maxlength="500" placeholder="ملخص"></textarea><textarea name="body" required maxlength="30000" placeholder="المحتوى النصي"></textarea><button class="btn primary" type="submit">نشر</button></form><div id="adminPostsList" class="admin-list"></div></section>
   <section class="admin-tab" id="tab-requests"><h2>طلبات التعاون والخدمات والتواصل</h2><div id="adminRequests" class="admin-list"></div></section>
  </div>
 </section></main>
-<div id="siteFooter"></div><button class="to-top" id="toTop" aria-label="العودة للأعلى">↑</button><script src="assets/js/admin.js" defer></script><script src="assets/js/pwa.js" defer></script>
+<div id="siteFooter"></div><button class="to-top" id="toTop" aria-label="العودة للأعلى">↑</button><script src="assets/js/admin.js" defer></script>
 </body></html>
