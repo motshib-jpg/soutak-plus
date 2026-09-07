@@ -1,0 +1,101 @@
+name: SoutakPlus Survival Monitor
+
+on:
+  schedule:
+    - cron: '17 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: soutak-survival-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate repository invariants
+        run: python3 QA_CHECK.py
+
+      - name: Verify live production and every sitemap URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from urllib.request import Request, urlopen
+          from urllib.error import HTTPError, URLError
+          import xml.etree.ElementTree as ET
+          import sys
+
+          ORIGIN = 'https://soutak-plus.vercel.app'
+          failures = []
+
+          def fetch(url, timeout=20):
+              req = Request(url, headers={'User-Agent':'SoutakPlus-Survival-Monitor/1.0'})
+              try:
+                  with urlopen(req, timeout=timeout) as r:
+                      return r.status, dict(r.headers), r.read()
+              except HTTPError as e:
+                  return e.code, dict(e.headers), e.read()
+              except URLError as e:
+                  failures.append(f'{url}: network error {e}')
+                  return 0, {}, b''
+
+          for path in ['/', '/content.html', '/robots.txt', '/sitemap.xml', '/ads.txt', '/privacy.html']:
+              status, headers, body = fetch(ORIGIN + path)
+              if status != 200:
+                  failures.append(f'{path}: expected 200, got {status}')
+              if not body:
+                  failures.append(f'{path}: empty response')
+
+          status, headers, sitemap = fetch(ORIGIN + '/sitemap.xml')
+          if status == 200:
+              try:
+                  root = ET.fromstring(sitemap)
+                  ns = {'s':'http://www.sitemaps.org/schemas/sitemap/0.9'}
+                  urls = [n.text.strip() for n in root.findall('s:url/s:loc', ns) if n.text]
+                  if len(urls) < 29:
+                      failures.append(f'sitemap regression: only {len(urls)} URLs')
+                  for url in urls:
+                      s, h, b = fetch(url)
+                      if s != 200:
+                          failures.append(f'{url}: expected 200, got {s}')
+                      if not b:
+                          failures.append(f'{url}: empty body')
+                      if url.endswith('.html') and '/articles/' in url:
+                          text = b.decode('utf-8', errors='ignore')
+                          if 'cdn.jsdelivr.net/npm/@supabase/supabase-js' in text or 'supabase-client.js' in text:
+                              failures.append(f'{url}: public database SDK dependency returned')
+              except Exception as e:
+                  failures.append(f'sitemap parse failed: {e}')
+
+          s, h, body = fetch(ORIGIN + '/ads.txt')
+          expected = 'google.com, pub-2236396092729732, DIRECT, f08c47fec0942fa0'
+          if s == 200 and body.decode('utf-8', errors='ignore').strip() != expected:
+              failures.append('ads.txt changed unexpectedly')
+
+          s, h, body = fetch(ORIGIN + '/robots.txt')
+          robots = body.decode('utf-8', errors='ignore')
+          if s == 200 and f'Sitemap: {ORIGIN}/sitemap.xml' not in robots:
+              failures.append('robots.txt no longer advertises sitemap')
+
+          s, h, body = fetch(ORIGIN + '/content.html')
+          text = body.decode('utf-8', errors='ignore')
+          if s == 200:
+              for marker in ['id="contentLab"', 'assets/js/reader-tools.js']:
+                  if marker not in text:
+                      failures.append(f'content hub missing live marker: {marker}')
+
+          if failures:
+              print('LIVE SURVIVAL MONITOR FAILED', file=sys.stderr)
+              for f in failures:
+                  print('-', f, file=sys.stderr)
+              sys.exit(1)
+          print('LIVE SURVIVAL MONITOR PASSED')
+          PY
